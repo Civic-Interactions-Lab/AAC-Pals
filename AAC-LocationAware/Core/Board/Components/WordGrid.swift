@@ -84,6 +84,7 @@ private struct WordGridPreview: View {
             }
         }
         .background(Color(hex: "#F5F6FA"))
+        .previewAllEnvironments()
     }
 }
 
@@ -103,4 +104,5 @@ private struct WordGridPreview: View {
     )
     .padding(.top, 12)
     .background(Color(hex: "#F5F6FA"))
+        .previewAllEnvironments()
 }

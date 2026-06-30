@@ -1,10 +1,3 @@
-//
-//  AAC_LocationAwareApp.swift
-//  AAC-LocationAware
-//
-//  Created by Dat Nguyen on 6/29/26.
-//
-
 import SwiftUI
 
 @main
@@ -14,27 +7,66 @@ struct AAC_LocationAwareApp: App {
     var body: some Scene {
         WindowGroup {
             AppView()
-                .onAppear {
-                    // Lock to landscape on iPad
-                    if UIDevice.current.userInterfaceIdiom == .pad {
-                        AppDelegate.lockOrientation(.landscape)
-                    }
-                }
+                .environment(delegate.dependencies.pictogramManager)
         }
     }
 }
 
 class AppDelegate: NSObject, UIApplicationDelegate {
-    static var orientationLock: UIInterfaceOrientationMask = .landscape
+    var dependencies: Dependency!
 
-    static func lockOrientation(_ orientation: UIInterfaceOrientationMask) {
-        orientationLock = orientation
-        let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene
-        windowScene?.requestGeometryUpdate(.iOS(interfaceOrientations: orientation))
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        let config: BuildConfiguration
+
+        #if MOCK
+        config = .mock
+        print("MOCK BUILD")
+        #elseif DEV
+        config = .development
+        print("DEV BUILD")
+        #else
+        config = .production
+        print("PROD BUILD")
+        #endif
+
+        config.configure()
+        dependencies = Dependency(config)
+        return true
     }
+}
 
-    func application(_ application: UIApplication,
-                     supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
-        AppDelegate.orientationLock
+enum BuildConfiguration {
+    case mock, development, production
+
+    func configure() {
+        switch self {
+        case .mock:
+            break
+        case .development:
+            // Configure Supabase dev + some dev tools
+            break
+        case .production:
+            // Configure Supabase prod
+            break
+        }
+    }
+}
+
+@MainActor
+struct Dependency {
+    let pictogramManager: PictogramManager
+
+    init(_ config: BuildConfiguration) {
+        switch config {
+        case .mock:
+            self.pictogramManager = PictogramManager(service: MockPictogramService())
+        case .development:
+            self.pictogramManager = PictogramManager(service: ArasaacPictogramService())
+        case .production:
+            self.pictogramManager = PictogramManager(service: ArasaacPictogramService())
+        }
     }
 }

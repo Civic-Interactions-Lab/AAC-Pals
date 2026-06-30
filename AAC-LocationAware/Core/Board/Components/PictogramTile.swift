@@ -5,6 +5,7 @@ struct PictogramTile: View {
     let tileSize: CGFloat
     let onTap: () -> Void
 
+    @Environment(PictogramManager.self) private var pictogramManager
     @State private var image: UIImage?
     @State private var loading = true
 
@@ -46,9 +47,7 @@ struct PictogramTile: View {
         .buttonStyle(.plain)
         .task(id: word.label) {
             loading = true
-            if let url = await fetchPictogramURL(label: word.label, arasaacId: word.arasaacId) {
-                image = await ImageCache.shared.load(url)
-            }
+            image = await pictogramManager.fetchImage(for: word.label, arasaacId: word.arasaacId)
             loading = false
         }
     }
@@ -74,6 +73,7 @@ struct PictogramTile: View {
     }
     .padding()
     .background(Color(hex: "#F5F6FA"))
+        .previewAllEnvironments()
 }
 
 #Preview("API search — resolves via search term") {
@@ -84,6 +84,7 @@ struct PictogramTile: View {
     }
     .padding()
     .background(Color(hex: "#F5F6FA"))
+        .previewAllEnvironments()
 }
 
 #Preview("Fallback — unknown word") {
@@ -93,6 +94,7 @@ struct PictogramTile: View {
     }
     .padding()
     .background(Color(hex: "#F5F6FA"))
+        .previewAllEnvironments()
 }
 
 #Preview("Fitzgerald colors") {
@@ -106,4 +108,5 @@ struct PictogramTile: View {
     }
     .padding()
     .background(Color(hex: "#F5F6FA"))
+        .previewAllEnvironments()
 }

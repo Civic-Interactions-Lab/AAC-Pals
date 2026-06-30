@@ -66,6 +66,7 @@ private struct SentenceWordChip: View {
     let word: Word
     let onTap: () -> Void
 
+    @Environment(PictogramManager.self) private var pictogramManager
     @State private var image: UIImage?
 
     private let imageSize: CGFloat = 28
@@ -97,9 +98,7 @@ private struct SentenceWordChip: View {
         }
         .buttonStyle(.plain)
         .task(id: word.label) {
-            if let url = await fetchPictogramURL(label: word.label, arasaacId: word.arasaacId) {
-                image = await ImageCache.shared.load(url)
-            }
+            image = await pictogramManager.fetchImage(for: word.label, arasaacId: word.arasaacId)
         }
     }
 
@@ -125,6 +124,7 @@ private struct SentenceBarPreview: View {
             )
         }
         .background(Color(hex: "#F5F6FA"))
+        .previewAllEnvironments()
     }
 }
 

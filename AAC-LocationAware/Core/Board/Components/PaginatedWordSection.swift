@@ -96,6 +96,7 @@ struct PaginatedWordSection: View {
     )
     .padding()
     .background(Color(hex: "#F5F6FA"))
+        .previewAllEnvironments()
 }
 
 #Preview("Room words — paginated") {
@@ -108,6 +109,7 @@ struct PaginatedWordSection: View {
     )
     .padding()
     .background(Color(hex: "#F5F6FA"))
+        .previewAllEnvironments()
 }
 
 #Preview("Empty state") {
@@ -120,4 +122,5 @@ struct PaginatedWordSection: View {
     )
     .padding()
     .background(Color(hex: "#F5F6FA"))
+        .previewAllEnvironments()
 }

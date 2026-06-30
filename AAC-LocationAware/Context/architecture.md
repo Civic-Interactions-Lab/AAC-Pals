@@ -25,12 +25,25 @@ AAC-LocationAware/
 │               #   ViewModels/  — @Observable classes holding state and business logic for the feature
 │               #   Models/      — data models scoped to that feature only
 ├── Components/   # Shared reusable UI pieces used across multiple features
-├── Services/     # One folder per external integration or business domain (Supabase, BLE, TTS, AI, etc.)
+├── Services/     # One folder per domain. Each service folder follows the pattern:
+│               #   Service/     — protocol + Mock + Real implementations
+│               #   Manager/     — @Observable class injected via SwiftUI environment; views only talk to the manager
+│               #   Model/       — data types owned by that service (optional)
 ├── Data/         # Static app data and domain logic (vocabulary, color rules)
 ├── Models/       # Plain Swift structs and enums — no logic
 ├── Extensions/   # Extensions on Swift and SwiftUI built-in types
 └── Context/      # AI and developer context docs
 ```
+
+## Service Pattern
+
+Every service domain follows the same three-layer pattern:
+
+- **Protocol** — defines the interface (`func fetchX(...) async -> Y`)
+- **Implementations** — `MockXService` (static data, no network) and `RealXService` (live backend)
+- **Manager** — `@Observable` class that owns the service instance and exposes state + actions to views via `@Environment`
+
+The `App/` folder wires everything: `BuildConfiguration` (mock/dev/prod) → `Dependency` struct picks the right service implementations → `AAC_LocationAwareApp` injects managers into the environment.
 
 ## Storage Model
 

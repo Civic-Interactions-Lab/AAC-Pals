@@ -10,4 +10,12 @@ struct Word: Identifiable, Hashable {
         self.label = label
         self.arasaacId = arasaacId
     }
+
+    static var mock: Word {
+        Word(label: "Eat", arasaacId: 6456)
+    }
+
+    static var mocks: [Word] {
+        AACVocabulary.coreWords
+    }
 }

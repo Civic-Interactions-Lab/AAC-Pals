@@ -6,6 +6,26 @@ struct AppView: View {
     }
 }
 
-#Preview {
+// MARK: - Preview Helper
+
+extension View {
+    func previewAllEnvironments() -> some View {
+        self
+            .environment(PictogramManager(service: MockPictogramService()))
+    }
+}
+
+#Preview("Default") {
     AppView()
+        .previewAllEnvironments()
+}
+
+#Preview("Slow pictograms") {
+    AppView()
+        .environment(PictogramManager(service: MockPictogramService(delay: 2)))
+}
+
+#Preview("Failed pictograms") {
+    AppView()
+        .environment(PictogramManager(service: MockPictogramService(showError: true)))
 }

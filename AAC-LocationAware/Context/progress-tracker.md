@@ -22,6 +22,10 @@ Update this file after every meaningful implementation change.
 
 ---
 
+- 02 — Service Layer & Build Configuration: Refactored pictogram fetching into Model/Service/Manager pattern. `PictogramService` protocol with `MockPictogramService` (instant hardcoded URLs, supports delay/error) and `ArasaacPictogramService` (real API, URL cache in UserDefaults, image cache in memory). `PictogramManager` (`@Observable`) holds both pictogram fetching and sentence state (`sentence`, `addWord`, `removeLast`, `remove(at:)`, `clearSentence`) — injected via SwiftUI environment. `BuildConfiguration` enum (mock/development/production) with `Dependency` struct wiring the right service per build. Three Xcode schemes (`Mock`, `Dev`, `Prod`) with `Active Compilation Conditions` (`MOCK`, `DEV`) in Build Settings. `previewAllEnvironments()` extension injects mock managers into every preview. iPad orientation locked to landscape via Info.plist (`UISupportedInterfaceOrientations~ipad`).
+
+---
+
 ## In Progress
 
 - None.

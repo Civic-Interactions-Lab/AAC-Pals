@@ -2,7 +2,7 @@ import SwiftUI
 import AVFoundation
 
 struct BoardView: View {
-    @State private var sentence: [Word] = []
+    @Environment(PictogramManager.self) private var pictogramManager
     @State private var currentRoom: String
 
     init(currentRoom: String = "kitchen") {
@@ -14,18 +14,18 @@ struct BoardView: View {
     var body: some View {
         VStack(spacing: 0) {
             SentenceBar(
-                sentence: sentence,
+                sentence: pictogramManager.sentence,
                 onSpeak: { speakSentence() },
-                onClear: { sentence = [] },
-                onRemoveLast: { if !sentence.isEmpty { sentence.removeLast() } },
-                onRemoveAt: { sentence.remove(at: $0) }
+                onClear: { pictogramManager.clearSentence() },
+                onRemoveLast: { pictogramManager.removeLast() },
+                onRemoveAt: { pictogramManager.remove(at: $0) }
             )
             .padding(.top, 12)
 
             WordGrid(
                 coreWords: AACVocabulary.coreWords,
                 roomWords: roomWords,
-                onTap: { sentence.append($0) }
+                onTap: { pictogramManager.addWord($0) }
             )
             .padding(.top, 12)
         }
@@ -34,20 +34,11 @@ struct BoardView: View {
     }
 
     private func prefetch() async {
-        let allWords = AACVocabulary.coreWords + roomWords
-        await withTaskGroup(of: Void.self) { group in
-            for word in allWords {
-                group.addTask {
-                    if let url = await fetchPictogramURL(label: word.label, arasaacId: word.arasaacId) {
-                        _ = await ImageCache.shared.load(url)
-                    }
-                }
-            }
-        }
+        await pictogramManager.prefetch(words: AACVocabulary.coreWords + roomWords)
     }
 
     private func speakSentence() {
-        let text = sentence.map(\.label).joined(separator: " ")
+        let text = pictogramManager.sentence.map(\.label).joined(separator: " ")
         guard !text.isEmpty else { return }
         let utterance = AVSpeechUtterance(string: text)
         utterance.rate = 0.5
@@ -57,12 +48,15 @@ struct BoardView: View {
 
 #Preview("Kitchen") {
     BoardView(currentRoom: "kitchen")
+        .previewAllEnvironments()
 }
 
 #Preview("Bathroom") {
     BoardView(currentRoom: "bathroom")
+        .previewAllEnvironments()
 }
 
 #Preview("Empty room") {
     BoardView(currentRoom: "unknown")
+        .previewAllEnvironments()
 }
