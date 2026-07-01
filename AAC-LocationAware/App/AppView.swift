@@ -24,7 +24,7 @@ extension View {
             .environment(authManager)
             .environment(userManager)
             .environment(PictogramManager(service: MockPictogramService()))
-            .task { await userManager.loadProfiles() }
+            .task { await userManager.loadProfiles(adminId: "preview-admin") }
     }
 }
 

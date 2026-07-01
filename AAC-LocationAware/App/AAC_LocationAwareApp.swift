@@ -69,11 +69,11 @@ struct Dependency {
             self.pictogramManager = PictogramManager(service: MockPictogramService())
         case .development:
             self.authManager = AuthManager(service: SupabaseAuthService())
-            self.userManager = UserManager(service: LocalUserService())
+            self.userManager = UserManager(service: SupabaseUserService())
             self.pictogramManager = PictogramManager(service: ArasaacPictogramService())
         case .production:
             self.authManager = AuthManager(service: SupabaseAuthService())
-            self.userManager = UserManager(service: LocalUserService())
+            self.userManager = UserManager(service: SupabaseUserService())
             self.pictogramManager = PictogramManager(service: ArasaacPictogramService())
         }
     }

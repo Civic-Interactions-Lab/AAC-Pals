@@ -18,10 +18,7 @@ struct RootView: View {
                 BoardView()
             }
         }
-        .task {
-            await authManager.loadCurrentUser()
-            await userManager.loadProfiles()
-        }
+        .task { await authManager.loadCurrentUser() }
     }
 }
 

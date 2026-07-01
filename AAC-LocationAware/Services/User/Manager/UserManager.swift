@@ -8,13 +8,20 @@ class UserManager {
 
     private(set) var profiles: [UserProfile] = []
     private(set) var activeProfile: UserProfile?
+    private(set) var isLoading = false
 
     init(service: UserService) {
         self.service = service
     }
 
-    func loadProfiles() async {
-        profiles = await service.loadProfiles()
+    func clearProfiles() {
+        profiles = []
+    }
+
+    func loadProfiles(adminId: String) async {
+        isLoading = true
+        profiles = await service.loadProfiles(adminId: adminId)
+        isLoading = false
     }
 
     func selectProfile(_ profile: UserProfile) {
@@ -25,22 +32,21 @@ class UserManager {
         activeProfile = nil
     }
 
-    func addProfile(displayName: String) async {
-        let profile = UserProfile.makeNew(displayName: displayName)
-        profiles.append(profile)
-        await service.saveProfiles(profiles)
+    func addProfile(displayName: String, adminId: String) async {
+        guard let profile = await service.addProfile(displayName: displayName, adminId: adminId) else { return }
+        profiles = await service.loadProfiles(adminId: adminId)
+        _ = profile
     }
 
-    func renameProfile(id: String, displayName: String) async {
-        guard let index = profiles.firstIndex(where: { $0.id == id }) else { return }
-        profiles[index].displayName = displayName
+    func renameProfile(id: String, displayName: String, adminId: String) async {
+        await service.renameProfile(id: id, displayName: displayName)
+        profiles = await service.loadProfiles(adminId: adminId)
         if activeProfile?.id == id { activeProfile?.displayName = displayName }
-        await service.saveProfiles(profiles)
     }
 
-    func deleteProfile(id: String) async {
-        profiles.removeAll { $0.id == id }
+    func deleteProfile(id: String, adminId: String) async {
+        await service.deleteProfile(id: id)
+        profiles = await service.loadProfiles(adminId: adminId)
         if activeProfile?.id == id { activeProfile = nil }
-        await service.saveProfiles(profiles)
     }
 }

@@ -16,10 +16,15 @@ struct UserSelectorView: View {
 
             ScrollView {
                 VStack(spacing: 0) {
-                    HeroSection()
+                    HeroSection(adminName: authManager.currentUser?.email.components(separatedBy: "@").first ?? "")
                         .padding(.top, 16)
 
-                    if userManager.profiles.isEmpty {
+                    if userManager.isLoading {
+                        ProgressView()
+                            .tint(Color(hex: "#FF9F43"))
+                            .scaleEffect(1.4)
+                            .padding(.top, 80)
+                    } else if userManager.profiles.isEmpty {
                         EmptyState(onAdd: { showAddUser = true })
                             .padding(.top, 48)
                     } else {
@@ -95,6 +100,11 @@ struct UserSelectorView: View {
             }
         }
         .ignoresSafeArea(.keyboard)
+        .task(id: authManager.currentUser?.id) {
+            guard let adminId = authManager.currentUser?.id else { return }
+            userManager.clearProfiles()
+            await userManager.loadProfiles(adminId: adminId)
+        }
         .animation(.easeOut(duration: 0.18), value: showAddUser)
         .animation(.easeOut(duration: 0.18), value: showEditUser?.id)
         .confirmationDialog(
@@ -106,7 +116,9 @@ struct UserSelectorView: View {
             titleVisibility: .visible
         ) {
             Button("Delete", role: .destructive) {
-                if let id = showDeleteConfirm?.id { Task { await userManager.deleteProfile(id: id) } }
+                if let id = showDeleteConfirm?.id, let adminId = authManager.currentUser?.id {
+                    Task { await userManager.deleteProfile(id: id, adminId: adminId) }
+                }
                 showDeleteConfirm = nil
             }
             Button("Cancel", role: .cancel) { showDeleteConfirm = nil }
@@ -160,21 +172,22 @@ private struct DecorativeBackground: View {
 // MARK: - HeroSection
 
 private struct HeroSection: View {
+    let adminName: String
+
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
                     Text("👋")
                         .font(.system(size: 18))
-                    Text("Welcome back!")
+                    Text("Welcome back, \(adminName)!")
                         .font(.system(size: 13, weight: .medium, design: .rounded))
                         .foregroundStyle(Color(hex: "#FF9F43"))
                 }
 
-                Text("Who's learning\ntoday?")
+                Text("Who's learning today?")
                     .font(.system(size: 30, weight: .black, design: .rounded))
                     .foregroundStyle(Color(hex: "#1A1A2E"))
-                    .lineSpacing(2)
 
                 Text("Choose a user to continue\ntheir adventure.")
                     .font(.system(size: 13, weight: .medium, design: .rounded))
@@ -502,6 +515,7 @@ enum ProfileNameMode { case add, edit }
 // MARK: - AddEditProfileModal
 
 private struct AddEditProfileModal: View {
+    @Environment(AuthManager.self) private var authManager
     @Environment(UserManager.self) private var userManager
 
     let mode: ProfileNameMode
@@ -618,12 +632,12 @@ private struct AddEditProfileModal: View {
 
     private func save() {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return }
+        guard !trimmed.isEmpty, let adminId = authManager.currentUser?.id else { return }
         isSaving = true
         if mode == .add {
-            Task { await userManager.addProfile(displayName: trimmed) }
+            Task { await userManager.addProfile(displayName: trimmed, adminId: adminId) }
         } else if let id = profile?.id {
-            Task { await userManager.renameProfile(id: id, displayName: trimmed) }
+            Task { await userManager.renameProfile(id: id, displayName: trimmed, adminId: adminId) }
         }
         isPresented = false
     }
@@ -639,7 +653,7 @@ private struct AddEditProfileModal: View {
         .environment(authManager)
         .environment(userManager)
         .environment(PictogramManager(service: MockPictogramService()))
-        .task { await userManager.loadProfiles() }
+        .task { await userManager.loadProfiles(adminId: "preview-admin") }
 }
 
 #Preview("Empty") {
@@ -649,5 +663,5 @@ private struct AddEditProfileModal: View {
         .environment(authManager)
         .environment(userManager)
         .environment(PictogramManager(service: MockPictogramService()))
-        .task { await userManager.loadProfiles() }
+        .task { await userManager.loadProfiles(adminId: "preview-admin") }
 }
