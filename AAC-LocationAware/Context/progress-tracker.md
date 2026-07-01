@@ -30,19 +30,24 @@ Update this file after every meaningful implementation change.
 
 ---
 
+---
+
+- 04 — User Selector Screen + User Service Layer: Full `UserSelectorView` with warm `#FFF7EE` background, decorative blob background, animated floating shapes (bottom-right), hero section with admin name from email, lazy card grid. `UserCard` — gradient avatar circle, select button, long-press context menu for edit/delete. `AddUserCard` — dashed border card to add new user. `AddEditProfileModal` — centered ZStack overlay (no sheet), orange-focus text field, instant focus via `Task`, smooth `easeOut(0.18)` fade animation. `EmptyState` for zero-user case. Orange spinner shown while loading. `UserService` protocol with `LocalUserService` (UserDefaults, keyed per admin), `MockUserService`, and `SupabaseUserService` (scoped by `admin_id`, individual CRUD ops that re-fetch after mutation). `UserManager` (`@Observable`) holds `profiles`, `activeProfile`, `isLoading`; `clearProfiles()` prevents flashing previous account data. `UserProfile` model with `UserRole` enum (`user`/`admin`). `RootView` routes to `UserSelectorView` when `activeProfile == nil`. `UserSelectorView` uses `.task(id: adminId)` to re-fetch on account switch. Auth/Register views redesigned to match — same warm background, `AuthTextField` with orange focus border, `AuthFloatingShapes`, shared via `AuthComponents.swift`. BoardView has bottom-right `person.2.fill` button to return to user selector via `userManager.exitProfile()`. All "student/learner" terminology renamed to "user".
+
+---
+
 ## In Progress
 
 - None.
 
 ## Next Up
 
-1. Build User Selector screen — student profile picker shown after admin signs in
-2. Wire Supabase — fetch real rooms and words, replace static vocabulary
-3. Add CoreBluetooth beacon detection and room switching
-4. Build admin panel — rooms, words, beacons, students
-5. Add interaction logging to Supabase `interaction_logs` table on every word tap
-6. Add analytics dashboard (top words, top rooms, per-student breakdown)
-7. Add AI word suggestions
+1. Wire Supabase — fetch real rooms and words, replace static vocabulary
+2. Add CoreBluetooth beacon detection and room switching
+3. Build admin panel — rooms, words, beacons, users
+4. Add interaction logging to Supabase `interaction_logs` table on every word tap
+5. Add analytics dashboard (top words, top rooms, per-user breakdown)
+6. Add AI word suggestions
 
 ## Open Questions
 
