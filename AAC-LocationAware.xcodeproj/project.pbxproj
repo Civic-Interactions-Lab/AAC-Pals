@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		77B080AA2FF4C0570034D7DD /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 77B080A92FF4C0570034D7DD /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		772954E82FF335A50030B7EB /* AAC-LocationAware.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AAC-LocationAware.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				77B080AA2FF4C0570034D7DD /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = "AAC-LocationAware";
 			packageProductDependencies = (
+				77B080A92FF4C0570034D7DD /* Supabase */,
 			);
 			productName = "AAC-LocationAware";
 			productReference = 772954E82FF335A50030B7EB /* AAC-LocationAware.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = 772954DF2FF335A50030B7EB;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				77B080A82FF4C0570034D7DD /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 772954E92FF335A50030B7EB /* Products */;
 			projectDirPath = "";
@@ -428,6 +437,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		77B080A82FF4C0570034D7DD /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		77B080A92FF4C0570034D7DD /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 77B080A82FF4C0570034D7DD /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 772954E02FF335A50030B7EB /* Project object */;
 }

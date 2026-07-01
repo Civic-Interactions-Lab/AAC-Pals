@@ -21,6 +21,17 @@ class AuthManager {
         isLoading = false
     }
 
+    func signUp(email: String, password: String) async {
+        error = nil
+        isLoading = true
+        do {
+            currentUser = try await service.signUp(email: email, password: password)
+        } catch {
+            self.error = error.localizedDescription
+        }
+        isLoading = false
+    }
+
     func signIn(email: String, password: String) async {
         error = nil
         isLoading = true

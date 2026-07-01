@@ -26,20 +26,23 @@ Update this file after every meaningful implementation change.
 
 ---
 
+- 03 — Auth Service Layer + Login/Register UI: `AuthService` protocol with `MockAuthService` (accepts admin/admin, configurable delay/error) and `SupabaseAuthService` (real Supabase auth — signIn, signUp, signOut, getCurrentUser). `AuthManager` (`@Observable`) holds `currentUser`, `isSignedIn`, `isLoading`, `error` — injected via environment. `RootView` routes between `LoginView` and `BoardView` based on auth state, restores session on launch. `LoginView` — gradient background, centered white card, keyboard-avoiding ScrollView, links to RegisterView via fullScreenCover. `RegisterView` — same style, email/password/confirm password with mismatch validation. Supabase Swift SDK added via SPM. `Config.swift` holds Supabase URL and anon key. `previewAllEnvironments` updated with `isSignedIn` and `authError` params. Interactive `@Previewable` preview on RootView for sign in/out flow.
+
+---
+
 ## In Progress
 
 - None.
 
 ## Next Up
 
-1. Add Supabase Swift SDK via Swift Package Manager
-2. Configure Supabase client (URL + anon key via environment or plist)
-3. Build User Selector screen
-4. Wire Supabase — fetch real rooms and words
-5. Add CoreBluetooth beacon detection and room switching
-6. Build admin panel — rooms, words, beacons, students
-7. Add interaction logging and analytics
-8. Add AI word suggestions
+1. Build User Selector screen — student profile picker shown after admin signs in
+2. Wire Supabase — fetch real rooms and words, replace static vocabulary
+3. Add CoreBluetooth beacon detection and room switching
+4. Build admin panel — rooms, words, beacons, students
+5. Add interaction logging to Supabase `interaction_logs` table on every word tap
+6. Add analytics dashboard (top words, top rooms, per-student breakdown)
+7. Add AI word suggestions
 
 ## Open Questions
 

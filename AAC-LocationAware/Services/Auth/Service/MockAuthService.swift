@@ -3,10 +3,18 @@ import Foundation
 struct MockAuthService: AuthService {
     let authUser: AuthUser?
     let delay: Double
+    let showError: Bool
 
-    init(authUser: AuthUser? = nil, delay: Double = 0.5) {
+    init(authUser: AuthUser? = nil, delay: Double = 0.5, showError: Bool = false) {
         self.authUser = authUser
         self.delay = delay
+        self.showError = showError
+    }
+
+    func signUp(email: String, password: String) async throws -> AuthUser {
+        try await Task.sleep(for: .seconds(delay))
+        if showError { throw AuthError.unknown }
+        return AuthUser(id: UUID().uuidString, email: email)
     }
 
     func signIn(email: String, password: String) async throws -> AuthUser {

@@ -5,6 +5,7 @@ struct LoginView: View {
 
     @State private var email = ""
     @State private var password = ""
+    @State private var showRegister = false
 
     var body: some View {
         ZStack {
@@ -98,7 +99,13 @@ struct LoginView: View {
                         }
                         .disabled(authManager.isLoading || email.isEmpty || password.isEmpty)
 
-
+                        Button {
+                            showRegister = true
+                        } label: {
+                            Text("Don't have an account? **Create one**")
+                                .font(.system(size: 14, design: .rounded))
+                                .foregroundColor(Color(hex: "#FF6B6B"))
+                        }
                     }
                     .padding(28)
                     .background(Color.white)
@@ -112,6 +119,9 @@ struct LoginView: View {
                 .padding(.horizontal, 32)
             }
             .scrollDismissesKeyboard(.interactively)
+        }
+        .fullScreenCover(isPresented: $showRegister) {
+            RegisterView()
         }
     }
 }
