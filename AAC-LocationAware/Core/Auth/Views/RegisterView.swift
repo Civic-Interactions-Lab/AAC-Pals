@@ -8,6 +8,10 @@ struct RegisterView: View {
     @State private var password = ""
     @State private var confirmPassword = ""
 
+    @FocusState private var focusedField: RegisterField?
+
+    enum RegisterField { case email, password, confirm }
+
     private var passwordMismatch: Bool {
         !confirmPassword.isEmpty && confirmPassword != password
     }
@@ -18,77 +22,110 @@ struct RegisterView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [Color(hex: "#FF6B6B"), Color(hex: "#FF9F43"), Color(hex: "#FFEAA7")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            AuthBackground()
 
             ScrollView {
                 VStack(spacing: 32) {
-                    Spacer(minLength: 40)
+                    Spacer(minLength: 48)
 
-                    VStack(spacing: 16) {
+                    // Hero
+                    VStack(spacing: 12) {
                         ZStack {
                             Circle()
-                                .fill(Color.white.opacity(0.25))
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color(hex: "#FF9F43"), Color(hex: "#FF6B6B")],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
                                 .frame(width: 110, height: 110)
+                                .shadow(color: Color(hex: "#FF9F43").opacity(0.35), radius: 20, x: 0, y: 8)
                             Image(systemName: "person.badge.plus.fill")
                                 .font(.system(size: 48))
-                                .foregroundColor(.white)
+                                .foregroundStyle(.white)
                         }
 
                         Text("AAC Board")
                             .font(.system(size: 38, weight: .black, design: .rounded))
-                            .foregroundColor(.white)
+                            .foregroundStyle(Color(hex: "#1A1A2E"))
 
                         Text("Create an admin account")
                             .font(.system(size: 15, weight: .medium, design: .rounded))
-                            .foregroundColor(.white.opacity(0.85))
+                            .foregroundStyle(Color(hex: "#9CA3AF"))
                     }
 
                     // Form card
                     VStack(spacing: 20) {
                         VStack(spacing: 4) {
-                            Text("Join us!")
-                                .font(.system(size: 26, weight: .black, design: .rounded))
-                                .foregroundColor(Color(hex: "#2D3436"))
+                            Text("Join us! 🎉")
+                                .font(.system(size: 24, weight: .black, design: .rounded))
+                                .foregroundStyle(Color(hex: "#1A1A2E"))
                             Text("Set up your admin account below")
-                                .font(.system(size: 14, weight: .medium, design: .rounded))
-                                .foregroundColor(Color(hex: "#636E72"))
+                                .font(.system(size: 13, weight: .medium, design: .rounded))
+                                .foregroundStyle(Color(hex: "#9CA3AF"))
                         }
 
                         if let error = authManager.error {
                             HStack(spacing: 10) {
                                 Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(Color(hex: "#D63031"))
+                                    .foregroundStyle(Color(hex: "#D63031"))
                                 Text(error)
-                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                    .foregroundColor(Color(hex: "#D63031"))
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(Color(hex: "#D63031"))
                             }
                             .padding(14)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(hex: "#FF7675").opacity(0.15))
-                            .cornerRadius(14)
+                            .background(Color(hex: "#FF7675").opacity(0.12))
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
 
                         VStack(spacing: 12) {
-                            FunTextField(icon: "envelope.fill", placeholder: "Email", text: $email)
-                                .autocapitalization(.none)
-                                .keyboardType(.emailAddress)
+                            AuthTextField(
+                                icon: "envelope.fill",
+                                placeholder: "Email",
+                                text: $email,
+                                isFocused: focusedField == .email
+                            )
+                            .focused($focusedField, equals: .email)
+                            .autocapitalization(.none)
+                            .keyboardType(.emailAddress)
+                            .submitLabel(.next)
+                            .onSubmit { focusedField = .password }
 
-                            FunTextField(icon: "lock.fill", placeholder: "Password", text: $password, isSecure: true)
+                            AuthTextField(
+                                icon: "lock.fill",
+                                placeholder: "Password",
+                                text: $password,
+                                isSecure: true,
+                                isFocused: focusedField == .password
+                            )
+                            .focused($focusedField, equals: .password)
+                            .submitLabel(.next)
+                            .onSubmit { focusedField = .confirm }
 
-                            FunTextField(icon: "lock.fill", placeholder: "Confirm password", text: $confirmPassword, isSecure: true)
+                            AuthTextField(
+                                icon: "lock.shield.fill",
+                                placeholder: "Confirm password",
+                                text: $confirmPassword,
+                                isSecure: true,
+                                isFocused: focusedField == .confirm
+                            )
+                            .focused($focusedField, equals: .confirm)
+                            .submitLabel(.go)
+                            .onSubmit {
+                                if canSubmit {
+                                    Task { await authManager.signUp(email: email, password: password) }
+                                }
+                            }
 
                             if passwordMismatch {
                                 HStack(spacing: 6) {
                                     Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(Color(hex: "#D63031"))
+                                        .foregroundStyle(Color(hex: "#D63031"))
                                     Text("Passwords do not match")
                                         .font(.system(size: 13, weight: .medium, design: .rounded))
-                                        .foregroundColor(Color(hex: "#D63031"))
+                                        .foregroundStyle(Color(hex: "#D63031"))
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
@@ -105,68 +142,57 @@ struct RegisterView: View {
                                         .font(.system(size: 17, weight: .black, design: .rounded))
                                 }
                             }
+                            .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 54)
                             .background(
                                 LinearGradient(
-                                    colors: [Color(hex: "#FF6B6B"), Color(hex: "#FF9F43")],
+                                    colors: [Color(hex: "#FF9F43"), Color(hex: "#FF6B6B")],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
                             )
-                            .foregroundColor(.white)
-                            .cornerRadius(18)
-                            .shadow(color: Color(hex: "#FF6B6B").opacity(0.4), radius: 10, x: 0, y: 4)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .shadow(color: Color(hex: "#FF9F43").opacity(0.35), radius: 12, x: 0, y: 4)
                         }
+                        .buttonStyle(.plain)
                         .disabled(!canSubmit)
 
                         Button {
                             dismiss()
                         } label: {
-                            Text("Already have an account? Sign in")
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                .foregroundColor(Color(hex: "#FF6B6B"))
+                            Text("Already have an account? **Sign in**")
+                                .font(.system(size: 14, design: .rounded))
+                                .foregroundStyle(Color(hex: "#FF9F43"))
                         }
                     }
                     .padding(28)
                     .background(Color.white)
-                    .cornerRadius(28)
-                    .shadow(color: .black.opacity(0.08), radius: 24, x: 0, y: 8)
+                    .clipShape(RoundedRectangle(cornerRadius: 28))
+                    .shadow(color: .black.opacity(0.08), radius: 32, x: 0, y: 12)
                     .frame(maxWidth: 440)
 
-                    Spacer(minLength: 40)
+                    Spacer(minLength: 48)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 32)
             }
             .scrollDismissesKeyboard(.interactively)
-        }
-    }
-}
 
-private struct FunTextField: View {
-    let icon: String
-    let placeholder: String
-    @Binding var text: String
-    var isSecure = false
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(Color(hex: "#FF9F43"))
-                .frame(width: 20)
-
-            if isSecure {
-                SecureField(placeholder, text: $text)
-            } else {
-                TextField(placeholder, text: $text)
+            // Floating shapes — bottom right
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    AuthFloatingShapes()
+                        .frame(width: 120, height: 110)
+                        .padding(.trailing, 32)
+                        .padding(.bottom, 32)
+                }
             }
+            .allowsHitTesting(false)
         }
-        .font(.system(size: 15, weight: .medium, design: .rounded))
-        .padding(15)
-        .background(Color(hex: "#F5F6FA"))
-        .cornerRadius(14)
+        .ignoresSafeArea(.keyboard)
     }
 }
 

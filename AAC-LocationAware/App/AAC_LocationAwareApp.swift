@@ -8,6 +8,7 @@ struct AAC_LocationAwareApp: App {
         WindowGroup {
             AppView()
                 .environment(delegate.dependencies.authManager)
+                .environment(delegate.dependencies.userManager)
                 .environment(delegate.dependencies.pictogramManager)
         }
     }
@@ -47,10 +48,8 @@ enum BuildConfiguration {
         case .mock:
             break
         case .development:
-            // Configure Supabase dev + some dev tools
             break
         case .production:
-            // Configure Supabase prod
             break
         }
     }
@@ -59,18 +58,22 @@ enum BuildConfiguration {
 @MainActor
 struct Dependency {
     let authManager: AuthManager
+    let userManager: UserManager
     let pictogramManager: PictogramManager
 
     init(_ config: BuildConfiguration) {
         switch config {
         case .mock:
             self.authManager = AuthManager(service: MockAuthService(authUser: nil))
+            self.userManager = UserManager(service: MockUserService())
             self.pictogramManager = PictogramManager(service: MockPictogramService())
         case .development:
             self.authManager = AuthManager(service: SupabaseAuthService())
+            self.userManager = UserManager(service: LocalUserService())
             self.pictogramManager = PictogramManager(service: ArasaacPictogramService())
         case .production:
             self.authManager = AuthManager(service: SupabaseAuthService())
+            self.userManager = UserManager(service: LocalUserService())
             self.pictogramManager = PictogramManager(service: ArasaacPictogramService())
         }
     }

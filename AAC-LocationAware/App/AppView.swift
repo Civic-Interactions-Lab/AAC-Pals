@@ -9,16 +9,22 @@ struct AppView: View {
 // MARK: - Preview Helper
 
 extension View {
-    func previewAllEnvironments(isSignedIn: Bool = true, authError: String? = nil) -> some View {
-        let authManager = AuthManager(service: MockAuthService(
-            authUser: isSignedIn ? .mock : nil
-        ))
-        if let authError {
-            authManager.setError(authError)
-        }
+    func previewAllEnvironments(
+        isSignedIn: Bool = true,
+        authError: String? = nil,
+        withProfile: Bool = false
+    ) -> some View {
+        let authManager = AuthManager(service: MockAuthService(authUser: isSignedIn ? .mock : nil))
+        if let authError { authManager.setError(authError) }
+
+        let userManager = UserManager(service: MockUserService())
+        if withProfile { userManager.selectProfile(UserProfile.mocks[0]) }
+
         return self
             .environment(authManager)
+            .environment(userManager)
             .environment(PictogramManager(service: MockPictogramService()))
+            .task { await userManager.loadProfiles() }
     }
 }
 
