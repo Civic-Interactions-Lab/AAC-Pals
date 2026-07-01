@@ -2,30 +2,32 @@ import SwiftUI
 
 struct AppView: View {
     var body: some View {
-        BoardView()
+        RootView()
     }
 }
 
 // MARK: - Preview Helper
 
 extension View {
-    func previewAllEnvironments() -> some View {
-        self
+    func previewAllEnvironments(isSignedIn: Bool = true, authError: String? = nil) -> some View {
+        let authManager = AuthManager(service: MockAuthService(
+            authUser: isSignedIn ? .mock : nil
+        ))
+        if let authError {
+            authManager.setError(authError)
+        }
+        return self
+            .environment(authManager)
             .environment(PictogramManager(service: MockPictogramService()))
     }
 }
 
-#Preview("Default") {
+#Preview("Signed in") {
     AppView()
-        .previewAllEnvironments()
+        .previewAllEnvironments(isSignedIn: true)
 }
 
-#Preview("Slow pictograms") {
+#Preview("Signed out") {
     AppView()
-        .environment(PictogramManager(service: MockPictogramService(delay: 2)))
-}
-
-#Preview("Failed pictograms") {
-    AppView()
-        .environment(PictogramManager(service: MockPictogramService(showError: true)))
+        .previewAllEnvironments(isSignedIn: false)
 }

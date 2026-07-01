@@ -7,6 +7,7 @@ struct AAC_LocationAwareApp: App {
     var body: some Scene {
         WindowGroup {
             AppView()
+                .environment(delegate.dependencies.authManager)
                 .environment(delegate.dependencies.pictogramManager)
         }
     }
@@ -57,15 +58,19 @@ enum BuildConfiguration {
 
 @MainActor
 struct Dependency {
+    let authManager: AuthManager
     let pictogramManager: PictogramManager
 
     init(_ config: BuildConfiguration) {
         switch config {
         case .mock:
+            self.authManager = AuthManager(service: MockAuthService(authUser: nil))
             self.pictogramManager = PictogramManager(service: MockPictogramService())
         case .development:
+            self.authManager = AuthManager(service: SupabaseAuthService())
             self.pictogramManager = PictogramManager(service: ArasaacPictogramService())
         case .production:
+            self.authManager = AuthManager(service: SupabaseAuthService())
             self.pictogramManager = PictogramManager(service: ArasaacPictogramService())
         }
     }

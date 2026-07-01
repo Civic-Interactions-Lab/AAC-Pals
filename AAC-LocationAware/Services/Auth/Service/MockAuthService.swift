@@ -1,0 +1,40 @@
+import Foundation
+
+struct MockAuthService: AuthService {
+    let authUser: AuthUser?
+    let delay: Double
+
+    init(authUser: AuthUser? = nil, delay: Double = 0.5) {
+        self.authUser = authUser
+        self.delay = delay
+    }
+
+    func signIn(email: String, password: String) async throws -> AuthUser {
+        try await Task.sleep(for: .seconds(delay))
+        // Mock accepts admin / admin
+        guard email == "admin" || email == "admin@aac.dev", password == "admin" else {
+            throw AuthError.invalidCredentials
+        }
+        return .mock
+    }
+
+    func signOut() async throws {
+        try await Task.sleep(for: .seconds(delay))
+    }
+
+    func getCurrentUser() async -> AuthUser? {
+        authUser
+    }
+}
+
+enum AuthError: LocalizedError {
+    case invalidCredentials
+    case unknown
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidCredentials: return "Invalid email or password."
+        case .unknown: return "Something went wrong. Please try again."
+        }
+    }
+}
