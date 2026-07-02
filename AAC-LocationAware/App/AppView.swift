@@ -3,6 +3,7 @@ import SwiftUI
 struct AppView: View {
     var body: some View {
         RootView()
+            .preferredColorScheme(.light)
     }
 }
 
@@ -24,6 +25,7 @@ extension View {
             .environment(authManager)
             .environment(userManager)
             .environment(PictogramManager(service: MockPictogramService()))
+            .environment(BeaconManager(service: MockBeaconService()))
             .task { await userManager.loadProfiles(adminId: "preview-admin") }
     }
 }

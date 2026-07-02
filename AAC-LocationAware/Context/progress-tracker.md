@@ -36,6 +36,12 @@ Update this file after every meaningful implementation change.
 
 ---
 
+---
+
+- 05 — BLE Beacon Service Layer + Room Detection: `BeaconConfig` model with `DetectionRadius` enum (veryClose/close/medium/far/custom) mapping to RSSI thresholds. `DetectedBeacon` model with optional `name`, `major`, `minor`, `rssi`. `BeaconService` protocol with callback pattern (`onBeaconDetected`). `MockBeaconService` — timer-based simulation firing every 3s, immediate fire on start. `CoreBluetoothBeaconService` — scans all peripherals with `AllowDuplicatesKey: true`, parses Apple iBeacon manufacturer data (`0x4C 0x00 0x02 0x15`) and falls back to peripheral name matching for non-iBeacon hardware. `BeaconManager` (`@Observable`) holds `currentRoomId` (defaults to "common"), `knownBeacons` config, watchdog timer polling every 3s — falls back to "common" after `fallbackDelay` (8s) with no matching signal. Kitchen beacon configured by peripheral name `"Kitchen"` with `.medium` radius. `BoardView` wired to read `beaconManager.currentRoomId`, starts/stops scanning on appear/disappear. `"common": []` fallback room added to `AACVocabulary`. `NSBluetoothAlwaysUsageDescription` added to build settings. App forced to light mode via `.preferredColorScheme(.light)` on `AppView`. All components refactored into individual files: `Core/Auth/Components/` (AuthBackground, AuthTextField, AuthFloatingShapes), `Core/UserSelector/Components/` (DecorativeBackground, HeroSection, FloatingShapes, UserGrid, UserCard, AddUserCard, EmptyState, AddEditProfileModal). `AuthBackground` and `DecorativeBackground` animate blobs across the screen. Previews added to all components.
+
+---
+
 ## In Progress
 
 - None.
@@ -43,11 +49,10 @@ Update this file after every meaningful implementation change.
 ## Next Up
 
 1. Wire Supabase — fetch real rooms and words, replace static vocabulary
-2. Add CoreBluetooth beacon detection and room switching
-3. Build admin panel — rooms, words, beacons, users
-4. Add interaction logging to Supabase `interaction_logs` table on every word tap
-5. Add analytics dashboard (top words, top rooms, per-user breakdown)
-6. Add AI word suggestions
+2. Build admin panel — rooms, words, beacons, users
+3. Add interaction logging to Supabase `interaction_logs` table on every word tap
+4. Add analytics dashboard (top words, top rooms, per-user breakdown)
+5. Add AI word suggestions
 
 ## Open Questions
 

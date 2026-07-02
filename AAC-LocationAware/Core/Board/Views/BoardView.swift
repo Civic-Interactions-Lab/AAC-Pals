@@ -4,12 +4,9 @@ import AVFoundation
 struct BoardView: View {
     @Environment(PictogramManager.self) private var pictogramManager
     @Environment(UserManager.self) private var userManager
-    @State private var currentRoom: String
+    @Environment(BeaconManager.self) private var beaconManager
 
-    init(currentRoom: String = "kitchen") {
-        _currentRoom = State(initialValue: currentRoom)
-    }
-
+    private var currentRoom: String { beaconManager.currentRoomId }
     private var roomWords: [Word] { AACVocabulary.roomWords[currentRoom] ?? [] }
 
     var body: some View {
@@ -41,7 +38,7 @@ struct BoardView: View {
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundStyle(Color(hex: "#FF9F43"))
                             .padding(14)
-                            .background(.ultraThinMaterial, in: Circle())
+                            .background(Color.white.opacity(0.9), in: Circle())
                             .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
                     }
                     .buttonStyle(.plain)
@@ -51,7 +48,9 @@ struct BoardView: View {
             }
         }
         .background(Color(hex: "#F5F6FA"))
+        .task { beaconManager.startScanning() }
         .task(id: currentRoom) { await prefetch() }
+        .onDisappear { beaconManager.stopScanning() }
     }
 
     private func prefetch() async {
@@ -67,17 +66,16 @@ struct BoardView: View {
     }
 }
 
-#Preview("Kitchen") {
-    BoardView(currentRoom: "kitchen")
+#Preview("Kitchen (beacon detected)") {
+    let beacon = MockBeaconService(simulatedBeacon: DetectedBeacon(name: "Kitchen", major: nil, minor: nil, rssi: -58))
+    BoardView()
         .previewAllEnvironments()
+        .environment(BeaconManager(service: beacon))
 }
 
-#Preview("Bathroom") {
-    BoardView(currentRoom: "bathroom")
+#Preview("Common (no beacon)") {
+    let beacon = MockBeaconService(simulatedBeacon: nil)
+    BoardView()
         .previewAllEnvironments()
-}
-
-#Preview("Empty room") {
-    BoardView(currentRoom: "unknown")
-        .previewAllEnvironments()
+        .environment(BeaconManager(service: beacon))
 }

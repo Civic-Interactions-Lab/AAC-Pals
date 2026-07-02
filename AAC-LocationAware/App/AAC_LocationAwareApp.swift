@@ -10,6 +10,7 @@ struct AAC_LocationAwareApp: App {
                 .environment(delegate.dependencies.authManager)
                 .environment(delegate.dependencies.userManager)
                 .environment(delegate.dependencies.pictogramManager)
+                .environment(delegate.dependencies.beaconManager)
         }
     }
 }
@@ -60,6 +61,7 @@ struct Dependency {
     let authManager: AuthManager
     let userManager: UserManager
     let pictogramManager: PictogramManager
+    let beaconManager: BeaconManager
 
     init(_ config: BuildConfiguration) {
         switch config {
@@ -67,14 +69,12 @@ struct Dependency {
             self.authManager = AuthManager(service: MockAuthService(authUser: nil))
             self.userManager = UserManager(service: MockUserService())
             self.pictogramManager = PictogramManager(service: MockPictogramService())
-        case .development:
+            self.beaconManager = BeaconManager(service: MockBeaconService())
+        case .development, .production:
             self.authManager = AuthManager(service: SupabaseAuthService())
             self.userManager = UserManager(service: SupabaseUserService())
             self.pictogramManager = PictogramManager(service: ArasaacPictogramService())
-        case .production:
-            self.authManager = AuthManager(service: SupabaseAuthService())
-            self.userManager = UserManager(service: SupabaseUserService())
-            self.pictogramManager = PictogramManager(service: ArasaacPictogramService())
+            self.beaconManager = BeaconManager(service: CoreBluetoothBeaconService())
         }
     }
 }

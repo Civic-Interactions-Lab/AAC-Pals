@@ -50,6 +50,7 @@ struct AACVocabulary {
     ]
 
     static let roomWords: [String: [Word]] = [
+        "common": [],   // fallback room when no beacon detected
         "kitchen": [
             "food","water","drink","eat","hungry","thirsty",
             "breakfast","lunch","dinner","snack","milk","juice",
