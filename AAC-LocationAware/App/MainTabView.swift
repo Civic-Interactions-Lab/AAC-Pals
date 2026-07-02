@@ -2,6 +2,7 @@ import SwiftUI
 
 enum AppTab {
     case users
+    case rooms
     case admin
 }
 
@@ -16,6 +17,10 @@ struct MainTabView: View {
                 UserSelectorView()
                     .tabItem { Label("Users", systemImage: "person.2.fill") }
                     .tag(AppTab.users)
+
+                RoomsView()
+                    .tabItem { Label("Rooms", systemImage: "mappin.circle.fill") }
+                    .tag(AppTab.rooms)
 
                 AdminView()
                     .tabItem { Label("Admin", systemImage: "chart.bar.fill") }

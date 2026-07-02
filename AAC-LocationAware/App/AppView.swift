@@ -29,7 +29,9 @@ extension View {
     func previewAllEnvironments(
         isSignedIn: Bool = true,
         authError: String? = nil,
-        withProfile: Bool = false
+        withProfile: Bool = false,
+        adminService: AdminService = MockAdminService(),
+        preloadRooms: Bool = false
     ) -> some View {
         let authManager = AuthManager(service: MockAuthService(authUser: isSignedIn ? .mock : nil))
         if let authError { authManager.setError(authError) }
@@ -37,13 +39,17 @@ extension View {
         let userManager = UserManager(service: MockUserService())
         if withProfile { userManager.selectProfile(UserProfile.mocks[0]) }
 
+        let adminManager = AdminManager(service: adminService)
+
         return self
             .environment(authManager)
             .environment(userManager)
             .environment(PictogramManager(service: MockPictogramService()))
             .environment(BeaconManager(service: MockBeaconService()))
             .environment(InteractionManager(service: MockInteractionService()))
+            .environment(adminManager)
             .task { await userManager.loadProfiles(adminId: "preview-admin") }
+            .task { if preloadRooms { await adminManager.loadRooms(adminId: "preview-admin") } }
     }
 }
 

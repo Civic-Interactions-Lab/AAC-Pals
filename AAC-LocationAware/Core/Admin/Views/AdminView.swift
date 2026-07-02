@@ -22,7 +22,9 @@ struct AdminView: View {
                     rankedLists
                     recentActivity
                 }
-                .padding(20)
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 20)
             }
         }
         .task(id: adminId) {
@@ -37,13 +39,13 @@ struct AdminView: View {
 
     private var header: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Admin Dashboard")
-                    .font(.system(size: 24, weight: .bold))
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Analytics")
+                    .font(.system(size: 30, weight: .black, design: .rounded))
                     .foregroundStyle(Color(hex: "#1A1A2E"))
-                Text("Interaction overview")
-                    .font(.system(size: 13))
-                    .foregroundStyle(Color(hex: "#1A1A2E").opacity(0.5))
+                Text("Interaction overview for your users")
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color(hex: "#9CA3AF"))
             }
             Spacer()
             Button {

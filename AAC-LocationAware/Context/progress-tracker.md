@@ -46,15 +46,20 @@ Update this file after every meaningful implementation change.
 
 ---
 
+- 08 — Rooms Tab (Admin CRUD): `Room` model with `Insert`/`Record` nested structs and snake_case `CodingKeys`. `RoomWord` model same pattern with `position`, `category`, `toInsert()`. `AdminService` protocol: `fetchRooms`, `addRoom`, `updateRoom`, `deleteRoom`, `fetchWords`, `addWord`, `updateWord`, `deleteWord`. `MockAdminService` — in-memory, seeded with `Room.mocks` and real AAC vocab via `RoomWord.mocks(for:)`. `SupabaseAdminService` — full Supabase CRUD for `rooms` and `room_words` tables. `AdminManager` (`@Observable`) holds `rooms: [Room]` and `wordsByRoom: [String: [RoomWord]]`. Supabase RLS policies added: `auth.uid() = admin_id` for both tables. `MainTabView` updated with Rooms tab. `RoomsView` — top-left header matching UserSelectorView, card grid `minimum: 200`, empty state with Create Room button. `RoomCard` — 100pt gradient avatar, word count, Open/Edit/Delete buttons inline. `AddRoomCard` — matches RoomCard height. `AddEditRoomModal` — label + roomId fields. `RoomDetailView` — renders words as `PictogramTile` grid (8 columns) matching the board, context menu for edit/delete. `AddEditWordModal` — label field + Fitzgerald category picker. `previewAllEnvironments` updated with `adminService` and `preloadRooms` params.
+
+---
+
 ## In Progress
 
 - None.
 
 ## Next Up
 
-1. Wire Supabase — fetch real rooms and words, replace static vocabulary
-2. Build manage rooms / words admin section
-3. Add AI word suggestions
+1. Wire `BoardView` to use rooms/words from `AdminManager` instead of static `AACVocabulary`
+2. Add AI word suggestions
+3. Category tabs / Room selector manual override
+4. SettingsMenuOverlay
 
 ## Open Questions
 
