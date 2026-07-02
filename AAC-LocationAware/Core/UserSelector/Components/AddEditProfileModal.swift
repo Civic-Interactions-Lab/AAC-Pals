@@ -91,7 +91,6 @@ struct AddEditProfileModal: View {
             .padding(.horizontal, 28)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .ignoresSafeArea(.keyboard)
         .onAppear {
             if mode == .edit { name = profile?.displayName ?? "" }
             Task { @MainActor in focused = true }

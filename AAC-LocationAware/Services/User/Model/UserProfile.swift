@@ -14,7 +14,7 @@ struct UserProfile: Identifiable, Codable, Equatable {
         UserProfile(id: UUID().uuidString, displayName: displayName, role: .user)
     }
 
-    func toRecord(adminId: String) -> Record {
+    func toRow(adminId: String) -> Record {
         Record(id: id, displayName: displayName, role: role.rawValue, adminId: adminId)
     }
 

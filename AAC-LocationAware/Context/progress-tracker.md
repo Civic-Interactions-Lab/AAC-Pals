@@ -30,11 +30,7 @@ Update this file after every meaningful implementation change.
 
 ---
 
----
-
 - 04 — User Selector Screen + User Service Layer: Full `UserSelectorView` with warm `#FFF7EE` background, decorative blob background, animated floating shapes (bottom-right), hero section with admin name from email, lazy card grid. `UserCard` — gradient avatar circle, select button, long-press context menu for edit/delete. `AddUserCard` — dashed border card to add new user. `AddEditProfileModal` — centered ZStack overlay (no sheet), orange-focus text field, instant focus via `Task`, smooth `easeOut(0.18)` fade animation. `EmptyState` for zero-user case. Orange spinner shown while loading. `UserService` protocol with `LocalUserService` (UserDefaults, keyed per admin), `MockUserService`, and `SupabaseUserService` (scoped by `admin_id`, individual CRUD ops that re-fetch after mutation). `UserManager` (`@Observable`) holds `profiles`, `activeProfile`, `isLoading`; `clearProfiles()` prevents flashing previous account data. `UserProfile` model with `UserRole` enum (`user`/`admin`). `RootView` routes to `UserSelectorView` when `activeProfile == nil`. `UserSelectorView` uses `.task(id: adminId)` to re-fetch on account switch. Auth/Register views redesigned to match — same warm background, `AuthTextField` with orange focus border, `AuthFloatingShapes`, shared via `AuthComponents.swift`. BoardView has bottom-right `person.2.fill` button to return to user selector via `userManager.exitProfile()`. All "student/learner" terminology renamed to "user".
-
----
 
 ---
 
@@ -42,9 +38,11 @@ Update this file after every meaningful implementation change.
 
 ---
 
+- 06 — Interaction Logging Service Layer: `InteractionLog` model with `InsertRow` (no id, for Supabase insert) and `Record` (has id, for decoding fetched results) nested structs. `toRow()` returns `InsertRow`. `InteractionService` protocol with `log(userId:adminId:word:roomId:)` and two `fetchLogs` overloads (by admin, by admin+user). `MockInteractionService` (no-op log, returns empty). `SupabaseInteractionService` — inserts via `InsertRow`, fetches via `[InteractionLog.Record]`. `InteractionManager` (`@Observable`) with `logWord`, `fetchLogs(adminId:)`, `fetchLogs(adminId:userId:)`. `activeAdminId` added to `UserManager` (set during `loadProfiles`). `BoardView` calls `interactionManager.logWord` on every word tap. `UserProfile.Row` renamed to `UserProfile.Record`. `InteractionManager` injected into app dependencies and `previewAllEnvironments`. Supabase table: `interaction_logs` with RLS policy scoped to `admin_id = auth.uid()`.
+
 ---
 
-- 06 — Interaction Logging Service Layer: `InteractionLog` model with `InsertRow` (no id, for Supabase insert) and `Record` (has id, for decoding fetched results) nested structs. `toRow()` returns `InsertRow`. `InteractionService` protocol with `log(userId:adminId:word:roomId:)` and two `fetchLogs` overloads (by admin, by admin+user). `MockInteractionService` (no-op log, returns empty). `SupabaseInteractionService` — inserts via `InsertRow`, fetches via `[InteractionLog.Record]`. `InteractionManager` (`@Observable`) with `logWord`, `fetchLogs(adminId:)`, `fetchLogs(adminId:userId:)`. `activeAdminId` added to `UserManager` (set during `loadProfiles`). `BoardView` calls `interactionManager.logWord` on every word tap. `UserProfile.Row` renamed to `UserProfile.Record`. `InteractionManager` injected into app dependencies and `previewAllEnvironments`. Supabase table: `interaction_logs` with RLS policy scoped to `admin_id = auth.uid()`.
+- 07 — Admin Panel + Tab Navigation: `MainTabView` with Users and Admin tabs using SwiftUI `TabView`, tinted orange. Gear button (`Menu`) moved from `UserSelectorView` into `MainTabView` as a top-right overlay — not a tab, triggers sign-out confirmation. `AdminView` built with warm background matching app design: 4 stat cards (interactions, users, rooms, words), horizontal user filter chips, ranked sections (top words, top rooms, top users), recent activity log feed. `AdminAnalytics` model computed client-side from logs. `InteractionManager.loadAnalytics(adminId:userId:)` fetches and computes analytics. `AdminStatCard`, `AdminRankedSection`, `AdminUserFilterBar`, `AdminRecentLogRow` components in `Core/Admin/Components/`. `AppView` merged with `RootView` — single routing view, `RootView.swift` deleted. `UserProfile.Record` rename: `toRecord` reverted back to `toRow` (returns `Record`). Auth views keyboard fix: removed `.ignoresSafeArea(.keyboard)`, made `ScrollView` the root with `AuthBackground` as `.background`, added `ScrollViewReader` + `proxy.scrollTo("form")` with spring animation on field focus. Same fix applied to `AddEditProfileModal`.
 
 ---
 
@@ -55,9 +53,8 @@ Update this file after every meaningful implementation change.
 ## Next Up
 
 1. Wire Supabase — fetch real rooms and words, replace static vocabulary
-2. Build admin panel — rooms, words, beacons, users
-3. Add analytics dashboard (top words, top rooms, per-user breakdown)
-4. Add AI word suggestions
+2. Build manage rooms / words admin section
+3. Add AI word suggestions
 
 ## Open Questions
 

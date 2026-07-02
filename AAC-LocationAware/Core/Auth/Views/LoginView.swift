@@ -12,13 +12,10 @@ struct LoginView: View {
     enum LoginField { case email, password }
 
     var body: some View {
-        ZStack {
-            AuthBackground()
-
-            ScrollView {
-                VStack(spacing: 32) {
-                    Spacer(minLength: 48)
-
+        ScrollView {
+            ScrollViewReader { proxy in
+            VStack(spacing: 32) {
+                Spacer(minLength: 48)
                     // Hero
                     VStack(spacing: 12) {
                         ZStack {
@@ -140,31 +137,31 @@ struct LoginView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 28))
                     .shadow(color: .black.opacity(0.08), radius: 32, x: 0, y: 12)
                     .frame(maxWidth: 440)
+                    .id("form")
 
                     Spacer(minLength: 48)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 32)
-            }
-            .scrollDismissesKeyboard(.interactively)
-
-            // Floating shapes — bottom right
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    AuthFloatingShapes()
-                        .frame(width: 120, height: 110)
-                        .padding(.trailing, 32)
-                        .padding(.bottom, 32)
+                .onChange(of: focusedField) { _, value in
+                    if value != nil {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { proxy.scrollTo("form", anchor: .center) }
+                    }
                 }
             }
-            .allowsHitTesting(false)
-        }
-        .ignoresSafeArea(.keyboard)
-        .fullScreenCover(isPresented: $showRegister) {
-            RegisterView()
-        }
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .background(AuthBackground())
+            .overlay(alignment: .bottomTrailing) {
+                AuthFloatingShapes()
+                    .frame(width: 120, height: 110)
+                    .padding(.trailing, 32)
+                    .padding(.bottom, 32)
+                    .allowsHitTesting(false)
+            }
+            .fullScreenCover(isPresented: $showRegister) {
+                RegisterView()
+            }
     }
 }
 

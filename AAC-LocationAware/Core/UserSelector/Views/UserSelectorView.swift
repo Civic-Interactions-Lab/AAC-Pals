@@ -48,32 +48,6 @@ struct UserSelectorView: View {
                 }
             }
 
-            VStack {
-                HStack {
-                    Spacer()
-                    Menu {
-                        Button(role: .destructive) {
-                            Task {
-                                userManager.exitProfile()
-                                await authManager.signOut()
-                            }
-                        } label: {
-                            Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
-                        }
-                    } label: {
-                        Image(systemName: "gearshape.fill")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(Color(hex: "#FF9F43"))
-                            .padding(12)
-                            .background(Color.white.opacity(0.85), in: Circle())
-                            .shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 2)
-                    }
-                    .padding(.trailing, 24)
-                    .padding(.top, 16)
-                }
-                Spacer()
-            }
-
             if showAddUser {
                 AddEditProfileModal(mode: .add, profile: nil, isPresented: $showAddUser)
                     .transition(.opacity)
@@ -91,7 +65,6 @@ struct UserSelectorView: View {
                 .transition(.opacity)
             }
         }
-        .ignoresSafeArea(.keyboard)
         .task(id: authManager.currentUser?.id) {
             guard let adminId = authManager.currentUser?.id else { return }
             userManager.clearProfiles()

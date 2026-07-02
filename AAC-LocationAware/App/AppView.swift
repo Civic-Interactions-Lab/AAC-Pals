@@ -1,9 +1,25 @@
 import SwiftUI
 
 struct AppView: View {
+    @Environment(AuthManager.self) private var authManager
+    @Environment(UserManager.self) private var userManager
+
     var body: some View {
-        RootView()
-            .preferredColorScheme(.light)
+        Group {
+            if authManager.isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color(hex: "#FFF7EE"))
+            } else if !authManager.isSignedIn {
+                LoginView()
+            } else if userManager.activeProfile == nil {
+                MainTabView()
+            } else {
+                BoardView()
+            }
+        }
+        .task { await authManager.loadCurrentUser() }
+        .preferredColorScheme(.light)
     }
 }
 
@@ -31,12 +47,32 @@ extension View {
     }
 }
 
-#Preview("Signed in") {
+#Preview("Sign in flow") {
+    @Previewable @State var authManager = AuthManager(service: MockAuthService(authUser: nil, delay: 0.5))
+    @Previewable @State var userManager = UserManager(service: MockUserService(profiles: []))
     AppView()
-        .previewAllEnvironments(isSignedIn: true)
+        .environment(authManager)
+        .environment(userManager)
+        .environment(PictogramManager(service: MockPictogramService()))
+        .environment(BeaconManager(service: MockBeaconService()))
+        .environment(InteractionManager(service: MockInteractionService()))
+}
+
+#Preview("Profile selector") {
+    let authManager = AuthManager(service: MockAuthService(authUser: .mock))
+    let userManager = UserManager(service: MockUserService())
+    AppView()
+        .environment(authManager)
+        .environment(userManager)
+        .environment(PictogramManager(service: MockPictogramService()))
+        .environment(BeaconManager(service: MockBeaconService()))
+        .environment(InteractionManager(service: MockInteractionService()))
+}
+
+#Preview("Signed in") {
+    AppView().previewAllEnvironments(isSignedIn: true)
 }
 
 #Preview("Signed out") {
-    AppView()
-        .previewAllEnvironments(isSignedIn: false)
+    AppView().previewAllEnvironments(isSignedIn: false)
 }
