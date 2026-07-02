@@ -4,7 +4,7 @@ import Supabase
 struct SupabaseUserService: UserService {
     func loadProfiles(adminId: String) async -> [UserProfile] {
         do {
-            let rows: [UserProfileRow] = try await supabase
+            let rows: [UserProfile.Record] = try await supabase
                 .from("user_profiles")
                 .select()
                 .eq("admin_id", value: adminId)
@@ -19,14 +19,9 @@ struct SupabaseUserService: UserService {
     }
 
     func addProfile(displayName: String, adminId: String) async -> UserProfile? {
-        let row = UserProfileRow(
-            id: UUID().uuidString,
-            displayName: displayName,
-            role: "user",
-            adminId: adminId
-        )
+        let row = UserProfile.makeNew(displayName: displayName).toRow(adminId: adminId)
         do {
-            let created: UserProfileRow = try await supabase
+            let created: UserProfile.Record = try await supabase
                 .from("user_profiles")
                 .insert(row)
                 .select()
@@ -62,36 +57,5 @@ struct SupabaseUserService: UserService {
         } catch {
             print("SupabaseUserService.deleteProfile error:", error)
         }
-    }
-}
-
-// MARK: - Row mapping
-
-private struct UserProfileRow: Codable {
-    let id: String
-    var displayName: String
-    var role: String
-    var adminId: String?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case displayName = "display_name"
-        case role
-        case adminId = "admin_id"
-    }
-
-    init(id: String, displayName: String, role: String, adminId: String? = nil) {
-        self.id = id
-        self.displayName = displayName
-        self.role = role
-        self.adminId = adminId
-    }
-
-    var asUserProfile: UserProfile {
-        UserProfile(
-            id: id,
-            displayName: displayName,
-            role: UserRole(rawValue: role) ?? .user
-        )
     }
 }

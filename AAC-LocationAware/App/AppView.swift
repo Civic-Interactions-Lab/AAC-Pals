@@ -26,6 +26,7 @@ extension View {
             .environment(userManager)
             .environment(PictogramManager(service: MockPictogramService()))
             .environment(BeaconManager(service: MockBeaconService()))
+            .environment(InteractionManager(service: MockInteractionService()))
             .task { await userManager.loadProfiles(adminId: "preview-admin") }
     }
 }

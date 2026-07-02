@@ -8,6 +8,7 @@ class UserManager {
 
     private(set) var profiles: [UserProfile] = []
     private(set) var activeProfile: UserProfile?
+    private(set) var activeAdminId: String?
     private(set) var isLoading = false
 
     init(service: UserService) {
@@ -20,6 +21,7 @@ class UserManager {
 
     func loadProfiles(adminId: String) async {
         isLoading = true
+        activeAdminId = adminId
         profiles = await service.loadProfiles(adminId: adminId)
         isLoading = false
     }

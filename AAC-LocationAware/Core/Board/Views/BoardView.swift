@@ -5,6 +5,7 @@ struct BoardView: View {
     @Environment(PictogramManager.self) private var pictogramManager
     @Environment(UserManager.self) private var userManager
     @Environment(BeaconManager.self) private var beaconManager
+    @Environment(InteractionManager.self) private var interactionManager
 
     private var currentRoom: String { beaconManager.currentRoomId }
     private var roomWords: [Word] { AACVocabulary.roomWords[currentRoom] ?? [] }
@@ -24,7 +25,13 @@ struct BoardView: View {
                 WordGrid(
                     coreWords: AACVocabulary.coreWords,
                     roomWords: roomWords,
-                    onTap: { pictogramManager.addWord($0) }
+                    onTap: { word in
+                        pictogramManager.addWord(word)
+                        if let user = userManager.activeProfile,
+                           let adminId = userManager.activeAdminId {
+                            interactionManager.logWord(word, userId: user.id, adminId: adminId, roomId: currentRoom)
+                        }
+                    }
                 )
                 .padding(.top, 12)
             }

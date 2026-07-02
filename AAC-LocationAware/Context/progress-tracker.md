@@ -42,6 +42,12 @@ Update this file after every meaningful implementation change.
 
 ---
 
+---
+
+- 06 — Interaction Logging Service Layer: `InteractionLog` model with `InsertRow` (no id, for Supabase insert) and `Record` (has id, for decoding fetched results) nested structs. `toRow()` returns `InsertRow`. `InteractionService` protocol with `log(userId:adminId:word:roomId:)` and two `fetchLogs` overloads (by admin, by admin+user). `MockInteractionService` (no-op log, returns empty). `SupabaseInteractionService` — inserts via `InsertRow`, fetches via `[InteractionLog.Record]`. `InteractionManager` (`@Observable`) with `logWord`, `fetchLogs(adminId:)`, `fetchLogs(adminId:userId:)`. `activeAdminId` added to `UserManager` (set during `loadProfiles`). `BoardView` calls `interactionManager.logWord` on every word tap. `UserProfile.Row` renamed to `UserProfile.Record`. `InteractionManager` injected into app dependencies and `previewAllEnvironments`. Supabase table: `interaction_logs` with RLS policy scoped to `admin_id = auth.uid()`.
+
+---
+
 ## In Progress
 
 - None.
@@ -50,9 +56,8 @@ Update this file after every meaningful implementation change.
 
 1. Wire Supabase — fetch real rooms and words, replace static vocabulary
 2. Build admin panel — rooms, words, beacons, users
-3. Add interaction logging to Supabase `interaction_logs` table on every word tap
-4. Add analytics dashboard (top words, top rooms, per-user breakdown)
-5. Add AI word suggestions
+3. Add analytics dashboard (top words, top rooms, per-user breakdown)
+4. Add AI word suggestions
 
 ## Open Questions
 
