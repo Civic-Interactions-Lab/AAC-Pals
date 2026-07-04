@@ -5,10 +5,13 @@ struct BoardView: View {
     @Environment(PictogramManager.self) private var pictogramManager
     @Environment(UserManager.self) private var userManager
     @Environment(BeaconManager.self) private var beaconManager
+    @Environment(AdminManager.self) private var adminManager
     @Environment(InteractionManager.self) private var interactionManager
 
     private var currentRoom: String { beaconManager.currentRoomId }
-    private var roomWords: [Word] { AACVocabulary.roomWords[currentRoom] ?? [] }
+    private var roomWords: [Word] {
+        adminManager.words(for: currentRoom).sorted { $0.position < $1.position }.map { Word(label: $0.label) }
+    }
 
     var body: some View {
         ZStack {
@@ -55,9 +58,22 @@ struct BoardView: View {
             }
         }
         .background(Color(hex: "#F5F6FA"))
-        .task { beaconManager.startScanning() }
-        .task(id: currentRoom) { await prefetch() }
+        .task { await startBeaconScanning() }
+        .task(id: currentRoom) {
+            if currentRoom != kCommonRoomId {
+                await adminManager.loadWords(for: currentRoom)
+            }
+            await prefetch()
+        }
         .onDisappear { beaconManager.stopScanning() }
+    }
+
+    private func startBeaconScanning() async {
+        if let adminId = userManager.activeAdminId {
+            let beacons = await adminManager.loadAllBeacons(adminId: adminId)
+            beaconManager.loadBeacons(beacons)
+        }
+        beaconManager.startScanning()
     }
 
     private func prefetch() async {
@@ -74,7 +90,7 @@ struct BoardView: View {
 }
 
 #Preview("Kitchen (beacon detected)") {
-    let beacon = MockBeaconService(simulatedBeacon: DetectedBeacon(name: "Kitchen", major: nil, minor: nil, rssi: -58))
+    let beacon = MockBeaconService(simulatedBeacon: DetectedBeacon(uuid: nil, name: "Kitchen", major: nil, minor: nil, rssi: -58))
     BoardView()
         .previewAllEnvironments()
         .environment(BeaconManager(service: beacon))

@@ -3,6 +3,7 @@ import CoreBluetooth
 
 final class CoreBluetoothBeaconService: NSObject, BeaconService {
     var onBeaconDetected: ((DetectedBeacon?) -> Void)?
+    private(set) var scannedBeacons: [String: DetectedBeacon] = [:]
 
     private var central: CBCentralManager?
 
@@ -11,6 +12,7 @@ final class CoreBluetoothBeaconService: NSObject, BeaconService {
     }
 
     func startScanning() {
+        scannedBeacons = [:]
         central = CBCentralManager(delegate: self, queue: .main)
     }
 
@@ -24,12 +26,7 @@ final class CoreBluetoothBeaconService: NSObject, BeaconService {
 
 extension CoreBluetoothBeaconService: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        print("[Beacon] BT state: \(central.state.rawValue)")
-        guard central.state == .poweredOn else {
-            print("[Beacon] Not powered on — cannot scan")
-            return
-        }
-        print("[Beacon] Starting scan...")
+        guard central.state == .poweredOn else { return }
         central.scanForPeripherals(
             withServices: nil,
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: true]
@@ -45,34 +42,40 @@ extension CoreBluetoothBeaconService: CBCentralManagerDelegate {
         let name = peripheral.name
         let rssi = RSSI.intValue
 
-        // Try iBeacon manufacturer data first
         if let data = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data,
            let beacon = parseIBeacon(from: data, rssi: rssi, name: name) {
-            print("[Beacon] iBeacon — name: \(name ?? "?") major: \(beacon.major!) minor: \(beacon.minor!) rssi: \(rssi)")
+            scannedBeacons[beacon.id] = beacon
             onBeaconDetected?(beacon)
             return
         }
 
-        // Fall back to name-based detection for non-iBeacon BLE peripherals
         guard let name, !name.isEmpty else { return }
-        print("[Beacon] Named peripheral: \(name) rssi: \(rssi)")
-        onBeaconDetected?(DetectedBeacon(name: name, major: nil, minor: nil, rssi: rssi))
+        let beacon = DetectedBeacon(uuid: nil, name: name, major: nil, minor: nil, rssi: rssi)
+        scannedBeacons[beacon.id] = beacon
+        onBeaconDetected?(beacon)
     }
 }
 
 // MARK: - iBeacon parsing
 
 private extension CoreBluetoothBeaconService {
-    /// Parses Apple iBeacon manufacturer data.
-    /// Format: [0x4C, 0x00, 0x02, 0x15, <16-byte UUID>, <2-byte major>, <2-byte minor>, <1-byte RSSI@1m>]
     func parseIBeacon(from data: Data, rssi: Int, name: String?) -> DetectedBeacon? {
         guard data.count >= 25 else { return nil }
         guard data[0] == 0x4C, data[1] == 0x00 else { return nil }
         guard data[2] == 0x02, data[3] == 0x15 else { return nil }
 
+        let uuidBytes = data[4..<20]
+        let hex = uuidBytes.map { String(format: "%02X", $0) }.joined()
+        let p1 = String(hex.prefix(8))
+        let p2 = String(hex.dropFirst(8).prefix(4))
+        let p3 = String(hex.dropFirst(12).prefix(4))
+        let p4 = String(hex.dropFirst(16).prefix(4))
+        let p5 = String(hex.dropFirst(20))
+        let formatted = "\(p1)-\(p2)-\(p3)-\(p4)-\(p5)"
+
         let major = UInt16(data[20]) << 8 | UInt16(data[21])
         let minor = UInt16(data[22]) << 8 | UInt16(data[23])
 
-        return DetectedBeacon(name: name, major: major, minor: minor, rssi: rssi)
+        return DetectedBeacon(uuid: formatted, name: name, major: major, minor: minor, rssi: rssi)
     }
 }

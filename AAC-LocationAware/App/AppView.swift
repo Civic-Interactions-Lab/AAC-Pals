@@ -62,6 +62,7 @@ extension View {
         .environment(PictogramManager(service: MockPictogramService()))
         .environment(BeaconManager(service: MockBeaconService()))
         .environment(InteractionManager(service: MockInteractionService()))
+        .environment(AdminManager(service: MockAdminService()))
 }
 
 #Preview("Profile selector") {
@@ -73,6 +74,7 @@ extension View {
         .environment(PictogramManager(service: MockPictogramService()))
         .environment(BeaconManager(service: MockBeaconService()))
         .environment(InteractionManager(service: MockInteractionService()))
+        .environment(AdminManager(service: MockAdminService()))
 }
 
 #Preview("Signed in") {

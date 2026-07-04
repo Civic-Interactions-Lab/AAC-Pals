@@ -11,15 +11,11 @@ struct AddEditRoomModal: View {
     @Binding var isPresented: Bool
 
     @State private var label = ""
-    @State private var roomId = ""
     @State private var isSaving = false
-    @FocusState private var focusedField: Field?
-
-    enum Field { case label, roomId }
+    @FocusState private var focused: Bool
 
     private var isValid: Bool {
-        !label.trimmingCharacters(in: .whitespaces).isEmpty &&
-        !roomId.trimmingCharacters(in: .whitespaces).isEmpty
+        !label.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     var body: some View {
@@ -30,31 +26,19 @@ struct AddEditRoomModal: View {
 
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(mode == .add ? "🏠 Add Room" : "✏️ Edit Room")
+                    Text(mode == .add ? "Add Room" : "Edit Room")
                         .font(.system(size: 22, weight: .black, design: .rounded))
                         .foregroundStyle(Color(hex: "#1A1A2E"))
-                    Text("Configure the room details")
+                    Text("Give this room a name")
                         .font(.system(size: 13, weight: .medium, design: .rounded))
                         .foregroundStyle(Color(hex: "#9CA3AF"))
                 }
 
-                VStack(spacing: 12) {
-                    AuthTextField(icon: "mappin.circle.fill", placeholder: "Room name (e.g. Kitchen)", text: $label, isFocused: focusedField == .label)
-                        .focused($focusedField, equals: .label)
-                        .textInputAutocapitalization(.words)
-                        .submitLabel(.next)
-                        .onSubmit { focusedField = .roomId }
-
-                    AuthTextField(icon: "antenna.radiowaves.left.and.right", placeholder: "Beacon ID (e.g. kitchen)", text: $roomId, isFocused: focusedField == .roomId)
-                        .focused($focusedField, equals: .roomId)
-                        .autocapitalization(.none)
-                        .submitLabel(.done)
-                        .onSubmit { save() }
-
-                    Text("Beacon ID must match what your beacon broadcasts.")
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
-                        .foregroundStyle(Color(hex: "#9CA3AF"))
-                }
+                AuthTextField(icon: "mappin.circle.fill", placeholder: "Room name (e.g. Kitchen)", text: $label, isFocused: focused)
+                    .focused($focused)
+                    .textInputAutocapitalization(.words)
+                    .submitLabel(.done)
+                    .onSubmit { save() }
 
                 HStack(spacing: 12) {
                     Button("Cancel") { isPresented = false }
@@ -102,28 +86,23 @@ struct AddEditRoomModal: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
-            if mode == .edit {
-                label = room?.label ?? ""
-                roomId = room?.roomId ?? ""
-            }
-            Task { @MainActor in focusedField = .label }
+            if mode == .edit { label = room?.label ?? "" }
+            Task { @MainActor in focused = true }
         }
     }
 
     private func save() {
-        let trimmedLabel = label.trimmingCharacters(in: .whitespaces)
-        let trimmedRoomId = roomId.trimmingCharacters(in: .whitespaces).lowercased()
-        guard !trimmedLabel.isEmpty, !trimmedRoomId.isEmpty,
-              let adminId = authManager.currentUser?.id else { return }
+        let trimmed = label.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, let adminId = authManager.currentUser?.id else { return }
         isSaving = true
         if mode == .add {
             Task {
-                await adminManager.addRoom(label: trimmedLabel, roomId: trimmedRoomId, adminId: adminId)
+                await adminManager.addRoom(label: trimmed, adminId: adminId)
                 isPresented = false
             }
         } else if let id = room?.id {
             Task {
-                await adminManager.updateRoom(id: id, label: trimmedLabel, roomId: trimmedRoomId)
+                await adminManager.updateRoom(id: id, label: trimmed)
                 isPresented = false
             }
         }

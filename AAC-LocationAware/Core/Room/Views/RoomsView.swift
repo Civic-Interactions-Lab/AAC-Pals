@@ -150,5 +150,5 @@ struct RoomsView: View {
 }
 
 #Preview("With Rooms") {
-    RoomsView().previewAllEnvironments(adminService: MockAdminService(rooms: Room.mocks), preloadRooms: true)
+    RoomsView().previewAllEnvironments(adminService: MockAdminService(), preloadRooms: true)
 }

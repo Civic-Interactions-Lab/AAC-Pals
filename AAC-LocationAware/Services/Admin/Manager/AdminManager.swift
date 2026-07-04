@@ -8,8 +8,8 @@ final class AdminManager {
 
     private(set) var rooms: [Room] = []
     private(set) var wordsByRoom: [String: [RoomWord]] = [:]
+    private(set) var beaconsByRoom: [String: [AppBeacon]] = [:]
     private(set) var isLoading = false
-    private(set) var loadError: String? = nil
 
     init(service: AdminService) {
         self.service = service
@@ -23,30 +23,26 @@ final class AdminManager {
 
     func loadRooms(adminId: String) async {
         isLoading = true
-        loadError = nil
         rooms = await service.fetchRooms(adminId: adminId)
         isLoading = false
-        if rooms.isEmpty {
-            print("[AdminManager] loadRooms returned 0 rooms for adminId: \(adminId)")
-        }
     }
 
-    func addRoom(label: String, roomId: String, adminId: String) async {
-        guard let room = await service.addRoom(label: label, roomId: roomId, adminId: adminId) else { return }
+    func addRoom(label: String, adminId: String) async {
+        guard let room = await service.addRoom(label: label, adminId: adminId) else { return }
         rooms.append(room)
     }
 
-    func updateRoom(id: String, label: String, roomId: String) async {
-        await service.updateRoom(id: id, label: label, roomId: roomId)
+    func updateRoom(id: String, label: String) async {
+        await service.updateRoom(id: id, label: label)
         guard let i = rooms.firstIndex(where: { $0.id == id }) else { return }
         rooms[i].label = label
-        rooms[i].roomId = roomId
     }
 
     func deleteRoom(id: String) async {
         await service.deleteRoom(id: id)
         rooms.removeAll { $0.id == id }
         wordsByRoom.removeValue(forKey: id)
+        beaconsByRoom.removeValue(forKey: id)
     }
 
     // MARK: - Words
@@ -71,5 +67,41 @@ final class AdminManager {
     func deleteWord(id: String, roomId: String) async {
         await service.deleteWord(id: id)
         wordsByRoom[roomId]?.removeAll { $0.id == id }
+    }
+
+    // MARK: - Beacons
+
+    func beacons(for roomId: String) -> [AppBeacon] {
+        beaconsByRoom[roomId] ?? []
+    }
+
+    func loadAllBeacons(adminId: String) async -> [AppBeacon] {
+        let all = await service.fetchAllBeacons(adminId: adminId)
+        for beacon in all {
+            beaconsByRoom[beacon.roomId, default: []].removeAll { $0.id == beacon.id }
+            beaconsByRoom[beacon.roomId, default: []].append(beacon)
+        }
+        return all
+    }
+
+    func loadBeacons(for roomId: String) async {
+        beaconsByRoom[roomId] = await service.fetchBeacons(roomId: roomId)
+    }
+
+    func addBeacon(beaconUuid: String, label: String, radius: Double, roomId: String, adminId: String) async {
+        guard let beacon = await service.addBeacon(beaconUuid: beaconUuid, label: label, radius: radius, roomId: roomId, adminId: adminId) else { return }
+        beaconsByRoom[roomId, default: []].append(beacon)
+    }
+
+    func updateBeacon(id: String, label: String, radius: Double, roomId: String) async {
+        await service.updateBeacon(id: id, label: label, radius: radius)
+        guard let i = beaconsByRoom[roomId]?.firstIndex(where: { $0.id == id }) else { return }
+        beaconsByRoom[roomId]?[i].label = label
+        beaconsByRoom[roomId]?[i].radius = radius
+    }
+
+    func deleteBeacon(id: String, roomId: String) async {
+        await service.deleteBeacon(id: id)
+        beaconsByRoom[roomId]?.removeAll { $0.id == id }
     }
 }

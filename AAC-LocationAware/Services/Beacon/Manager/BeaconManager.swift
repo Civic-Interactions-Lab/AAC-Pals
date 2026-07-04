@@ -11,11 +11,9 @@ final class BeaconManager {
     /// The room id currently detected. Defaults to "common" (fallback).
     private(set) var currentRoomId: String = kCommonRoomId
     private(set) var isScanning = false
+    var scannedBeacons: [DetectedBeacon] { Array(service.scannedBeacons.values) }
 
-    /// Known beacons to match against. Add more as you get new hardware.
-    var knownBeacons: [BeaconConfig] = [
-        .withName("Kitchen", radius: .medium, roomId: "kitchen")
-    ]
+    var knownBeacons: [BeaconConfig] = []
 
     /// How long (seconds) with no matching beacon signal before falling back to common.
     var fallbackDelay: TimeInterval = 8.0
@@ -49,9 +47,22 @@ final class BeaconManager {
         currentRoomId = kCommonRoomId
     }
 
+    func loadBeacons(_ beacons: [AppBeacon]) {
+        knownBeacons = beacons.map { appBeacon in
+            let looksLikeUUID = UUID(uuidString: appBeacon.beaconUuid) != nil
+            return BeaconConfig(
+                peripheralName: looksLikeUUID ? nil : appBeacon.beaconUuid,
+                major: nil,
+                minor: nil,
+                rssiThreshold: DetectionRadius.medium.rssi,
+                roomId: appBeacon.roomId,
+                beaconUuid: looksLikeUUID ? appBeacon.beaconUuid : nil
+            )
+        }
+    }
+
     private func handle(_ detected: DetectedBeacon?) {
         guard let beacon = detected else { return }
-
         if let match = knownBeacons.first(where: { $0.matches(beacon) }) {
             lastMatchedDate = Date()
             if currentRoomId != match.roomId {
@@ -59,7 +70,6 @@ final class BeaconManager {
                 currentRoomId = match.roomId
             }
         }
-        // Non-matching peripherals are ignored — watchdog handles the fallback
     }
 
     /// Polls every 3 seconds. If no matching beacon seen within fallbackDelay, revert to common.
@@ -69,7 +79,7 @@ final class BeaconManager {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(3))
                 guard !Task.isCancelled else { return }
-                await checkFallback()
+                checkFallback()
             }
         }
     }

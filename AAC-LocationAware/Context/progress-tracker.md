@@ -50,16 +50,19 @@ Update this file after every meaningful implementation change.
 
 ---
 
+- 09 — Beacon Management + Live Room Detection: `AppBeacon` model with `Insert`/`Record` nested structs for Supabase `beacons` table (`beacon_uuid unique`, `room_id`, `radius`, `label`). `AdminService` protocol extended with `fetchAllBeacons(adminId:)`, `fetchBeacons(roomId:)`, `addBeacon`, `updateBeacon`, `deleteBeacon`. `MockAdminService` updated with beacon CRUD and `beacons` init param for seeding previews. `SupabaseAdminService` full CRUD against `beacons` table using typed `Payload` struct for mixed-type updates. `AdminManager` extended with `beaconsByRoom`, `loadAllBeacons`, `loadBeacons(for:)`, `addBeacon`, `updateBeacon`, `deleteBeacon`. `BeaconService` protocol updated with `scannedBeacons: [String: DetectedBeacon]`. `MockBeaconService` seeds `scannedBeacons` on start. `DetectedBeacon` updated with `uuid: String?`, `Identifiable`, `displayName`, `signalLabel`, `signalColor`. `CoreBluetoothBeaconService` parses iBeacon UUID from manufacturer data bytes 4-19 and accumulates `scannedBeacons`. `BeaconConfig` extended with `beaconUuid` field and UUID-first matching. `BeaconManager.loadBeacons([AppBeacon])` detects UUID vs name identifier via `UUID(uuidString:)` and sets `beaconUuid` or `peripheralName` accordingly. `RoomDetailView` redesigned with beacon section (linked beacons list + Add Beacon button) above word grid. `BeaconRow` component with label, UUID, radius display and Edit/Delete buttons. `BeaconScannerModal` — split panel: left shows live BLE scan filtered to ≥-55 dBm (~3ft), right slides in on selection to set label/radius (in feet, 3–66ft range) and link to room. `EditBeaconModal` — edit label and radius of existing beacon. `BoardView` updated to load all beacons from Supabase on appear via `loadAllBeacons`, push into `BeaconManager.knownBeacons`, then start scanning. Room words now sourced from `AdminManager.words(for: currentRoomId)` instead of static `AACVocabulary`. Words loaded dynamically on room change via `.task(id: currentRoom)`. Supabase `beacons` table: RLS policy `auth.uid() = admin_id`.
+
+---
+
 ## In Progress
 
 - None.
 
 ## Next Up
 
-1. Wire `BoardView` to use rooms/words from `AdminManager` instead of static `AACVocabulary`
-2. Add AI word suggestions
-3. Category tabs / Room selector manual override
-4. SettingsMenuOverlay
+1. Add AI word suggestions
+2. Category tabs / Room selector manual override
+3. SettingsMenuOverlay
 
 ## Open Questions
 
