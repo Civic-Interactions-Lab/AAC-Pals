@@ -1,6 +1,8 @@
 import SwiftUI
 import AVFoundation
 
+let kActiveUserIdKey = "activeUserId"
+
 struct BoardView: View {
     @Environment(PictogramManager.self) private var pictogramManager
     @Environment(UserManager.self) private var userManager
@@ -10,6 +12,7 @@ struct BoardView: View {
 
     @State private var manualRoomId: String? = nil
     @State private var synthesizer = AVSpeechSynthesizer()
+    @State private var showPasscodeExit = false
 
     private var currentRoom: String { manualRoomId ?? beaconManager.currentRoomId }
     private var currentRoomName: String {
@@ -55,7 +58,7 @@ struct BoardView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Button { userManager.exitProfile() } label: {
+                    Button { showPasscodeExit = true } label: {
                         Image(systemName: "person.2.fill")
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundStyle(Color(hex: "#FF9F43"))
@@ -68,6 +71,21 @@ struct BoardView: View {
                     .padding(.bottom, 28)
                 }
             }
+
+            if showPasscodeExit, let profile = userManager.activeProfile {
+                PasscodeModal(
+                    correctPasscode: profile.passcode,
+                    message: "Enter passcode to leave the board",
+                    onSuccess: {
+                        showPasscodeExit = false
+                        UserDefaults.standard.removeObject(forKey: kActiveUserIdKey)
+                        userManager.exitProfile()
+                    },
+                    onCancel: { showPasscodeExit = false }
+                )
+                .transition(.opacity)
+                .animation(.easeOut(duration: 0.15), value: showPasscodeExit)
+            }
         }
         .background(Color(hex: "#F5F6FA"))
         .task { warmUpSynthesizer(); await startBeaconScanning() }
@@ -76,6 +94,11 @@ struct BoardView: View {
                 await adminManager.loadWords(for: currentRoom)
             }
             await prefetch()
+        }
+        .onAppear {
+            if let userId = userManager.activeProfile?.id {
+                UserDefaults.standard.set(userId, forKey: kActiveUserIdKey)
+            }
         }
         .onDisappear {
             beaconManager.stopScanning()
@@ -125,13 +148,13 @@ struct BoardView: View {
 #Preview("Kitchen (beacon detected)") {
     let beacon = MockBeaconService(simulatedBeacon: DetectedBeacon(uuid: nil, name: "Kitchen", major: nil, minor: nil, rssi: -58))
     BoardView()
-        .previewAllEnvironments()
+        .previewAllEnvironments(withProfile: true)
         .environment(BeaconManager(service: beacon))
 }
 
 #Preview("Common (no beacon)") {
     let beacon = MockBeaconService(simulatedBeacon: nil)
     BoardView()
-        .previewAllEnvironments()
+        .previewAllEnvironments(withProfile: true)
         .environment(BeaconManager(service: beacon))
 }

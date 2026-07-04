@@ -11,11 +11,21 @@ struct AddEditProfileModal: View {
     @Binding var isPresented: Bool
 
     @State private var name = ""
+    @State private var passcode = ""
+    @State private var passcodeError = ""
     @State private var isSaving = false
-    @FocusState private var focused: Bool
+    @FocusState private var focusedField: Field?
+
+    enum Field { case name, passcode }
 
     private var isValid: Bool {
-        !name.trimmingCharacters(in: .whitespaces).isEmpty
+        !name.trimmingCharacters(in: .whitespaces).isEmpty && passcode.count == 4 && !isPasscodeTaken
+    }
+
+    private var isPasscodeTaken: Bool {
+        userManager.profiles.contains { p in
+            p.passcode == passcode && p.id != (profile?.id ?? "")
+        }
     }
 
     var body: some View {
@@ -29,8 +39,7 @@ struct AddEditProfileModal: View {
                     Text(mode == .add ? "👤 Add User" : "✏️ Edit Name")
                         .font(.system(size: 22, weight: .black, design: .rounded))
                         .foregroundStyle(Color(hex: "#1A1A2E"))
-
-                    Text("What should we call this user?")
+                    Text("Set a name and 4-digit passcode")
                         .font(.system(size: 13, weight: .medium, design: .rounded))
                         .foregroundStyle(Color(hex: "#9CA3AF"))
                 }
@@ -39,12 +48,35 @@ struct AddEditProfileModal: View {
                     icon: "person.fill",
                     placeholder: mode == .add ? "e.g. Alex" : "New name",
                     text: $name,
-                    isFocused: focused
+                    isFocused: focusedField == .name
                 )
                 .textInputAutocapitalization(.words)
-                .submitLabel(.done)
-                .focused($focused)
-                .onSubmit { save() }
+                .submitLabel(.next)
+                .focused($focusedField, equals: .name)
+                .onSubmit { focusedField = .passcode }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    AuthTextField(
+                        icon: "lock.fill",
+                        placeholder: "4-digit passcode",
+                        text: $passcode,
+                        isFocused: focusedField == .passcode
+                    )
+                    .keyboardType(.numberPad)
+                    .focused($focusedField, equals: .passcode)
+                    .onChange(of: passcode) { _, val in
+                        let filtered = String(val.filter(\.isNumber).prefix(4))
+                        if filtered != val { passcode = filtered }
+                        passcodeError = (filtered.count == 4 && isPasscodeTaken) ? "Passcode already used by another user" : ""
+                    }
+
+                    if !passcodeError.isEmpty {
+                        Text(passcodeError)
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(Color(hex: "#FF6B6B"))
+                            .padding(.leading, 4)
+                    }
+                }
 
                 HStack(spacing: 12) {
                     Button("Cancel") { isPresented = false }
@@ -87,28 +119,33 @@ struct AddEditProfileModal: View {
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 28))
             .shadow(color: .black.opacity(0.18), radius: 48, x: 0, y: 20)
-            .frame(maxWidth: 400)
+            .frame(maxWidth: 420)
             .padding(.horizontal, 28)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
-            if mode == .edit { name = profile?.displayName ?? "" }
-            Task { @MainActor in focused = true }
+            if mode == .edit {
+                name = profile?.displayName ?? ""
+                passcode = profile?.passcode ?? ""
+            }
+            Task { @MainActor in focusedField = .name }
         }
     }
 
     private func save() {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty, let adminId = authManager.currentUser?.id else { return }
+        guard !isPasscodeTaken else { passcodeError = "Passcode already used by another user"; return }
         isSaving = true
         if mode == .add {
-            Task { await userManager.addProfile(displayName: trimmed, adminId: adminId) }
+            Task { await userManager.addProfile(displayName: trimmed, passcode: passcode, adminId: adminId) }
         } else if let id = profile?.id {
-            Task { await userManager.renameProfile(id: id, displayName: trimmed, adminId: adminId) }
+            Task { await userManager.updateProfile(id: id, displayName: trimmed, passcode: passcode, adminId: adminId) }
         }
         isPresented = false
     }
 }
+
 
 private struct AddEditProfileModalPreview: View {
     let mode: ProfileNameMode
@@ -120,10 +157,5 @@ private struct AddEditProfileModalPreview: View {
     }
 }
 
-#Preview("Add") {
-    AddEditProfileModalPreview(mode: .add)
-}
-
-#Preview("Edit") {
-    AddEditProfileModalPreview(mode: .edit)
-}
+#Preview("Add") { AddEditProfileModalPreview(mode: .add) }
+#Preview("Edit") { AddEditProfileModalPreview(mode: .edit) }

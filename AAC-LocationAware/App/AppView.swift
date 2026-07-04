@@ -19,7 +19,16 @@ struct AppView: View {
             }
         }
         .task { await authManager.loadCurrentUser() }
+        .task(id: userManager.profiles.count) { await restoreActiveUser() }
         .preferredColorScheme(.light)
+    }
+
+    private func restoreActiveUser() async {
+        guard userManager.activeProfile == nil,
+              let savedId = UserDefaults.standard.string(forKey: kActiveUserIdKey),
+              let match = userManager.profiles.first(where: { $0.id == savedId })
+        else { return }
+        userManager.selectProfile(match)
     }
 }
 

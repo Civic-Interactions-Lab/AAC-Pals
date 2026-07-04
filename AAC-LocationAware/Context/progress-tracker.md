@@ -54,20 +54,22 @@ Update this file after every meaningful implementation change.
 
 ---
 
+- 10 — Board Improvements + User Passcode System: `WordGrid` updated from 4/4 to 6/2 column split (`coreFraction = 6/8`), separate `coreTileSize` and `roomTileSize` computed per section. `AACVocabulary.coreWords` expanded from 20 → 72 words across pronouns, verbs, social, feelings, descriptors, location, questions, misc. Room selector banner added above right word column — tappable capsule showing current room name with chevron. `RoomPickerPopover` — popover anchored to banner, lists General + all rooms, shows beacon antenna icon on auto-detected room, checkmark on selected. `BoardView` loads rooms on appear so picker is populated on first launch; manual room override stored in `@State manualRoomId`, clears on beacon room change. `AVSpeechSynthesizer` warm-up on board appear (silent utterance) eliminates first-tap speech delay. Word tap now speaks individual word; Speak button reads full sentence. Sentence bar clears on board disappear. `RoomDetailView` words section shows styled empty state (icon + headline + CTA) when no words, matching rooms/users screen style. `UserProfile` model updated with `passcode: String` field throughout — model, `Record`, `makeNew`, `mocks`. `UserService` protocol and all implementations (`Mock`, `Supabase`, `Local`) updated: `addProfile` takes `passcode` param; new `updateProfile(id:displayName:passcode:)` method added for editing both name and passcode. `UserManager` wires new methods. `AddEditProfileModal` updated — passcode shown as plain 4-digit numeric text field in both Add and Edit modes; validates uniqueness against existing profiles with inline error message; Save button disabled if passcode is taken. `UserCard` updated — visible Edit/Delete buttons below Continue button, matching `RoomCard` style; passcode shown with lock icon below name. `AddUserCard` — `Color.clear` spacer added to match `UserCard` height. `PasscodeModal` (new) — full-screen overlay with 4-dot entry, shake animation on wrong code, tap-backdrop to dismiss, configurable message. `UserGrid` wires `onSelectPending` — passcode modal shown full-screen in `UserSelectorView` before entering board. `BoardView` shows passcode modal on exit button tap; saves active `userId` to `UserDefaults` on appear, removes on successful exit. `AppView` checks `UserDefaults` on cold start — if saved userId matches a loaded profile, auto-selects it and skips user selector. Supabase migration: `ALTER TABLE user_profiles ADD COLUMN passcode TEXT NOT NULL DEFAULT '0000'`.
+
+---
+
 ## In Progress
 
 - None.
 
 ## Next Up
 
-1. Add AI word suggestions
-2. Category tabs / Room selector manual override
-3. SettingsMenuOverlay
+1. Interaction log viewer UI in Admin tab
+2. Admin password protection for Admin tab
+3. Admin analytics
 
 ## Open Questions
 
-- Which AI provider for word suggestions — Groq (llama) or Claude?
-- Self-hosted suggestion server or direct API call from the app?
 - ARASAAC pictogram disk cache strategy — currently URL cached in UserDefaults, images in memory only
 
 ## Architecture Decisions

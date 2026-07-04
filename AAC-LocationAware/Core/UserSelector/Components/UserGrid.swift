@@ -5,6 +5,7 @@ struct UserGrid: View {
     let onEdit: (UserProfile) -> Void
     let onDelete: (UserProfile) -> Void
     let onAdd: () -> Void
+    let onSelectPending: (UserProfile) -> Void
 
     var body: some View {
         LazyVGrid(
@@ -14,7 +15,7 @@ struct UserGrid: View {
             ForEach(userManager.profiles) { profile in
                 UserCard(
                     profile: profile,
-                    onSelect: { userManager.selectProfile(profile) },
+                    onSelect: { onSelectPending(profile) },
                     onEdit: { onEdit(profile) },
                     onDelete: { onDelete(profile) }
                 )
@@ -30,7 +31,7 @@ struct UserGrid: View {
     ZStack {
         DecorativeBackground()
         ScrollView {
-            UserGrid(onEdit: { _ in }, onDelete: { _ in }, onAdd: {})
+            UserGrid(onEdit: { _ in }, onDelete: { _ in }, onAdd: {}, onSelectPending: { _ in })
                 .padding(.top, 16)
         }
     }

@@ -11,17 +11,16 @@ struct LocalUserService: UserService {
         return profiles
     }
 
-    func addProfile(displayName: String, adminId: String) async -> UserProfile? {
-        let profile = UserProfile(id: UUID().uuidString, displayName: displayName, role: .user)
+    func addProfile(displayName: String, passcode: String, adminId: String) async -> UserProfile? {
+        let profile = UserProfile(id: UUID().uuidString, displayName: displayName, role: .user, passcode: passcode)
         var profiles = await loadProfiles(adminId: adminId)
         profiles.append(profile)
         save(profiles, adminId: adminId)
         return profile
     }
 
-    func renameProfile(id: String, displayName: String) async {
-        // LocalUserService doesn't have a cross-admin index, so no-op for now
-    }
+    func renameProfile(id: String, displayName: String) async {}
+    func updateProfile(id: String, displayName: String, passcode: String) async {}
 
     func deleteProfile(id: String) async {}
 

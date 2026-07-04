@@ -48,15 +48,20 @@ struct UserCard: View {
                     .foregroundStyle(.white)
             }
 
-            VStack(spacing: 4) {
+            VStack(spacing: 6) {
                 Text(profile.displayName)
                     .font(.system(size: 18, weight: .black, design: .rounded))
                     .foregroundStyle(Color(hex: "#1A1A2E"))
                     .lineLimit(1)
 
-                Text("Ready to learn!")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color(hex: "#B2BEC3"))
+                HStack(spacing: 6) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color(hex: "#B2BEC3"))
+                    Text(profile.passcode)
+                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Color(hex: "#B2BEC3"))
+                }
             }
 
             Button(action: onSelect) {
@@ -79,6 +84,36 @@ struct UserCard: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16))
             }
             .buttonStyle(.plain)
+
+            HStack(spacing: 10) {
+                Button(action: onEdit) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "pencil")
+                        Text("Edit")
+                    }
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color(hex: "#FF9F43"))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Color(hex: "#FF9F43").opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+
+                Button(action: onDelete) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "trash")
+                        Text("Delete")
+                    }
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color(hex: "#FF6B6B"))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Color(hex: "#FF6B6B").opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+            }
         }
         .padding(24)
         .background(Color.white)
@@ -86,14 +121,6 @@ struct UserCard: View {
         .shadow(color: .black.opacity(0.07), radius: 24, x: 0, y: 8)
         .scaleEffect(isPressed ? 0.97 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.65), value: isPressed)
-        .contextMenu {
-            Button { onEdit() } label: {
-                Label("Rename", systemImage: "pencil")
-            }
-            Button(role: .destructive) { onDelete() } label: {
-                Label("Delete", systemImage: "trash")
-            }
-        }
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in isPressed = true }

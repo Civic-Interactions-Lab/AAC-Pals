@@ -48,6 +48,9 @@ struct AddUserCard: View {
                         }
                         .foregroundStyle(Color(hex: "#FF9F43"))
                     )
+
+                // Spacer to match UserCard's Edit/Delete row height
+                Color.clear.frame(height: 36)
             }
             .padding(24)
             .background(

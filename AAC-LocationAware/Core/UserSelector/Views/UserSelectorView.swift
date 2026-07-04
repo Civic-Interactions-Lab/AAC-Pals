@@ -7,6 +7,7 @@ struct UserSelectorView: View {
     @State private var showAddUser = false
     @State private var showEditUser: UserProfile? = nil
     @State private var showDeleteConfirm: UserProfile? = nil
+    @State private var pendingProfile: UserProfile? = nil
 
     var body: some View {
         ZStack {
@@ -29,7 +30,8 @@ struct UserSelectorView: View {
                         UserGrid(
                             onEdit: { showEditUser = $0 },
                             onDelete: { showDeleteConfirm = $0 },
-                            onAdd: { showAddUser = true }
+                            onAdd: { showAddUser = true },
+                            onSelectPending: { pendingProfile = $0 }
                         )
                         .padding(.top, 12)
                         .padding(.bottom, 48)
@@ -46,6 +48,20 @@ struct UserSelectorView: View {
                         .padding(.trailing, 32)
                         .padding(.bottom, 32)
                 }
+            }
+
+            if let profile = pendingProfile {
+                PasscodeModal(
+                    correctPasscode: profile.passcode,
+                    message: "Enter \(profile.displayName)'s passcode to continue",
+                    onSuccess: {
+                        pendingProfile = nil
+                        userManager.selectProfile(profile)
+                    },
+                    onCancel: { pendingProfile = nil }
+                )
+                .transition(.opacity)
+                .animation(.easeOut(duration: 0.15), value: pendingProfile?.id)
             }
 
             if showAddUser {
