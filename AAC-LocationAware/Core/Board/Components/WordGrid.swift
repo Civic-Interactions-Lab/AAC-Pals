@@ -5,23 +5,43 @@ struct WordGrid: View {
     let roomWords: [Word]
     let onTap: (Word) -> Void
 
+    var roomName: String? = nil
+    var rooms: [Room] = []
+    var selectedRoomId: String = kCommonRoomId
+    var beaconRoomId: String = kCommonRoomId
+    var onRoomSelect: ((String) -> Void)? = nil
+
+    @State private var showRoomPicker = false
+
     @State private var gridSize: CGSize = .zero
 
-    private let columns = 4
+    private let coreColumns = 6
+    private let roomColumns = 2
     private let sectionGap: CGFloat = 12
     private let padding: CGFloat = 12
     private let tileGap: CGFloat = 8
     private let surfacePadding: CGFloat = 10
 
-    private var tileSize: CGFloat {
+    private var totalWidth: CGFloat { max(0, gridSize.width - padding * 2 - sectionGap) }
+    private var coreFraction: CGFloat { CGFloat(coreColumns) / CGFloat(coreColumns + roomColumns) }
+
+    private var coreTileSize: CGFloat {
         guard gridSize.width > 0 else { return 70 }
-        let sectionWidth = (gridSize.width - padding * 2 - sectionGap) / 2
+        let sectionWidth = totalWidth * coreFraction
         let inner = sectionWidth - surfacePadding * 2 - 2
-        let available = inner - tileGap * CGFloat(columns - 1)
-        return max(60, floor(available / CGFloat(columns)))
+        let available = inner - tileGap * CGFloat(coreColumns - 1)
+        return max(60, floor(available / CGFloat(coreColumns)))
     }
 
-    private var tileHeight: CGFloat { max(44, min(84, tileSize * 0.62)) + 28 }
+    private var roomTileSize: CGFloat {
+        guard gridSize.width > 0 else { return 70 }
+        let sectionWidth = totalWidth * (1 - coreFraction)
+        let inner = sectionWidth - surfacePadding * 2 - 2
+        let available = inner - tileGap * CGFloat(roomColumns - 1)
+        return max(60, floor(available / CGFloat(roomColumns)))
+    }
+
+    private var tileHeight: CGFloat { max(44, min(84, coreTileSize * 0.62)) + 28 }
 
     private var rowsPerPage: Int {
         guard gridSize.height > 0 else { return 4 }
@@ -41,19 +61,53 @@ struct WordGrid: View {
             HStack(alignment: .top, spacing: sectionGap) {
                 PaginatedWordSection(
                     words: coreWords,
-                    tileSize: tileSize,
-                    columns: columns,
+                    tileSize: coreTileSize,
+                    columns: coreColumns,
                     rowsPerPage: rowsPerPage,
                     onTap: onTap
                 )
+                .frame(width: totalWidth * coreFraction)
 
-                PaginatedWordSection(
-                    words: filteredRoomWords,
-                    tileSize: tileSize,
-                    columns: columns,
-                    rowsPerPage: rowsPerPage,
-                    onTap: onTap
-                )
+                VStack(spacing: 6) {
+                    if let roomName {
+                        Button(action: { showRoomPicker = true }) {
+                            HStack(spacing: 4) {
+                                Text(roomName)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .lineLimit(1)
+                                Spacer()
+                                Image(systemName: "chevron.down")
+                                    .font(.system(size: 10, weight: .bold))
+                            }
+                            .foregroundStyle(Color(hex: "#0d4f4a"))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .frame(maxWidth: .infinity)
+                            .background(Color(hex: "#0d4f4a").opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                        }
+                        .buttonStyle(.plain)
+                        .popover(isPresented: $showRoomPicker, arrowEdge: .top) {
+                            RoomPickerPopover(
+                                rooms: rooms,
+                                selectedRoomId: selectedRoomId,
+                                beaconRoomId: beaconRoomId,
+                                onSelect: { id in
+                                    onRoomSelect?(id)
+                                    showRoomPicker = false
+                                }
+                            )
+                        }
+                    }
+
+                    PaginatedWordSection(
+                        words: filteredRoomWords,
+                        tileSize: roomTileSize,
+                        columns: roomColumns,
+                        rowsPerPage: rowsPerPage,
+                        onTap: onTap
+                    )
+                }
+                .frame(width: totalWidth * (1 - coreFraction))
             }
             .padding(.horizontal, padding)
             .padding(.bottom, padding)
@@ -88,21 +142,11 @@ private struct WordGridPreview: View {
     }
 }
 
-#Preview("Kitchen room") {
-    WordGridPreview(roomKey: "kitchen")
-}
-
-#Preview("Bathroom room") {
-    WordGridPreview(roomKey: "bathroom")
-}
-
+#Preview("Kitchen room") { WordGridPreview(roomKey: "kitchen") }
+#Preview("Bathroom room") { WordGridPreview(roomKey: "bathroom") }
 #Preview("Empty room words") {
-    WordGrid(
-        coreWords: AACVocabulary.coreWords,
-        roomWords: [],
-        onTap: { _ in }
-    )
-    .padding(.top, 12)
-    .background(Color(hex: "#F5F6FA"))
+    WordGrid(coreWords: AACVocabulary.coreWords, roomWords: [], onTap: { _ in })
+        .padding(.top, 12)
+        .background(Color(hex: "#F5F6FA"))
         .previewAllEnvironments()
 }

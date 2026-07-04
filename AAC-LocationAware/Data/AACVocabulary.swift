@@ -2,26 +2,96 @@ import Foundation
 
 struct AACVocabulary {
     static let coreWords: [Word] = [
+        // Pronouns
         Word(label: "I",        arasaacId: 6632),
         Word(label: "You"),
+        Word(label: "We"),
         Word(label: "It",       arasaacId: 31670),
+        Word(label: "My"),
+        Word(label: "Your"),
+
+        // Core verbs
         Word(label: "Want",     arasaacId: 5441),
         Word(label: "Need"),
         Word(label: "Like",     arasaacId: 37826),
         Word(label: "Go"),
         Word(label: "Stop"),
         Word(label: "Help"),
-        Word(label: "More"),
-        Word(label: "All done"),
+
+        Word(label: "Eat"),
+        Word(label: "Drink"),
+        Word(label: "Play"),
+        Word(label: "Look"),
+        Word(label: "Come"),
+        Word(label: "Give"),
+
+        Word(label: "Open"),
+        Word(label: "Close"),
+        Word(label: "Put"),
+        Word(label: "Make"),
+        Word(label: "Turn"),
+        Word(label: "Do"),
+
+        // Social / response
         Word(label: "Yes"),
         Word(label: "No",       arasaacId: 5526),
+        Word(label: "More"),
+        Word(label: "All done"),
+        Word(label: "Please"),
+        Word(label: "Wait"),
+
+        Word(label: "Thank you"),
+        Word(label: "Sorry"),
+        Word(label: "Hello"),
+        Word(label: "Bye"),
         Word(label: "Not"),
+        Word(label: "Again"),
+
+        // Feelings
+        Word(label: "Happy"),
+        Word(label: "Sad"),
+        Word(label: "Angry"),
+        Word(label: "Scared"),
+        Word(label: "Tired"),
+        Word(label: "Hurt"),
+
+        Word(label: "Good"),
+        Word(label: "Bad"),
+        Word(label: "Sick"),
+        Word(label: "Hungry"),
+        Word(label: "Thirsty"),
+        Word(label: "Hot"),
+
+        // Descriptors / location
+        Word(label: "Big"),
+        Word(label: "Little"),
+        Word(label: "Fast"),
+        Word(label: "Slow"),
+        Word(label: "Loud"),
+        Word(label: "Quiet"),
+
         Word(label: "Here"),
         Word(label: "There",    arasaacId: 5375),
         Word(label: "In",       arasaacId: 7034),
         Word(label: "On",       arasaacId: 21818),
+        Word(label: "Up"),
+        Word(label: "Out"),
+
+        // Questions
+        Word(label: "What"),
+        Word(label: "Where"),
+        Word(label: "Who"),
+        Word(label: "Why"),
+        Word(label: "When"),
+        Word(label: "How"),
+
+        // Misc
         Word(label: "That"),
         Word(label: "Mine"),
+        Word(label: "Same"),
+        Word(label: "Different"),
+        Word(label: "Some"),
+        Word(label: "All"),
     ]
 
     static let searchAliases: [String: String] = [

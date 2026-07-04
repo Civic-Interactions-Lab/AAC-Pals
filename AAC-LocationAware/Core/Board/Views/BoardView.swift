@@ -8,7 +8,13 @@ struct BoardView: View {
     @Environment(AdminManager.self) private var adminManager
     @Environment(InteractionManager.self) private var interactionManager
 
-    private var currentRoom: String { beaconManager.currentRoomId }
+    @State private var manualRoomId: String? = nil
+    @State private var synthesizer = AVSpeechSynthesizer()
+
+    private var currentRoom: String { manualRoomId ?? beaconManager.currentRoomId }
+    private var currentRoomName: String {
+        adminManager.rooms.first { $0.id == currentRoom }?.label ?? "General"
+    }
     private var roomWords: [Word] {
         adminManager.words(for: currentRoom).sorted { $0.position < $1.position }.map { Word(label: $0.label) }
     }
@@ -30,11 +36,17 @@ struct BoardView: View {
                     roomWords: roomWords,
                     onTap: { word in
                         pictogramManager.addWord(word)
+                        speakWord(word.label)
                         if let user = userManager.activeProfile,
                            let adminId = userManager.activeAdminId {
                             interactionManager.logWord(word, userId: user.id, adminId: adminId, roomId: currentRoom)
                         }
-                    }
+                    },
+                    roomName: currentRoomName,
+                    rooms: adminManager.rooms,
+                    selectedRoomId: currentRoom,
+                    beaconRoomId: beaconManager.currentRoomId,
+                    onRoomSelect: { manualRoomId = $0 }
                 )
                 .padding(.top, 12)
             }
@@ -58,18 +70,23 @@ struct BoardView: View {
             }
         }
         .background(Color(hex: "#F5F6FA"))
-        .task { await startBeaconScanning() }
+        .task { warmUpSynthesizer(); await startBeaconScanning() }
         .task(id: currentRoom) {
             if currentRoom != kCommonRoomId {
                 await adminManager.loadWords(for: currentRoom)
             }
             await prefetch()
         }
-        .onDisappear { beaconManager.stopScanning() }
+        .onDisappear {
+            beaconManager.stopScanning()
+            pictogramManager.clearSentence()
+        }
+        .onChange(of: beaconManager.currentRoomId) { manualRoomId = nil }
     }
 
     private func startBeaconScanning() async {
         if let adminId = userManager.activeAdminId {
+            await adminManager.loadRooms(adminId: adminId)
             let beacons = await adminManager.loadAllBeacons(adminId: adminId)
             beaconManager.loadBeacons(beacons)
         }
@@ -80,12 +97,28 @@ struct BoardView: View {
         await pictogramManager.prefetch(words: AACVocabulary.coreWords + roomWords)
     }
 
+    private func warmUpSynthesizer() {
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: .duckOthers)
+        try? AVAudioSession.sharedInstance().setActive(true)
+        let utterance = AVSpeechUtterance(string: " ")
+        utterance.volume = 0
+        synthesizer.speak(utterance)
+    }
+
+    private func speakWord(_ label: String) {
+        if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
+        let utterance = AVSpeechUtterance(string: label)
+        utterance.rate = 0.5
+        synthesizer.speak(utterance)
+    }
+
     private func speakSentence() {
         let text = pictogramManager.sentence.map(\.label).joined(separator: " ")
         guard !text.isEmpty else { return }
+        if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
         let utterance = AVSpeechUtterance(string: text)
         utterance.rate = 0.5
-        AVSpeechSynthesizer().speak(utterance)
+        synthesizer.speak(utterance)
     }
 }
 

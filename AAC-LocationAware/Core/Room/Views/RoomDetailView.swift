@@ -168,24 +168,72 @@ struct RoomDetailView: View {
                     let pad: CGFloat = 16
                     return floor((geo.size.width - pad * 2 - gap * (cols - 1)) / cols)
                 }()
-                LazyVGrid(
-                    columns: Array(repeating: GridItem(.fixed(tileSize), spacing: 10), count: 8),
-                    spacing: 10
-                ) {
-                    ForEach(words) { word in
-                        PictogramTile(
-                            word: Word(label: word.label),
-                            tileSize: tileSize,
-                            onTap: {}
-                        )
-                        .contextMenu {
-                            Button { editWord = word } label: { Label("Edit", systemImage: "pencil") }
-                            Button(role: .destructive) { deleteWord = word } label: { Label("Delete", systemImage: "trash") }
+                if words.isEmpty {
+                    VStack(spacing: 20) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(hex: "#FF9F43").opacity(0.1))
+                                .frame(width: 100, height: 100)
+                            Image(systemName: "text.bubble.fill")
+                                .font(.system(size: 38))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [Color(hex: "#FF9F43"), Color(hex: "#FF6B6B")],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        }
+                        VStack(spacing: 6) {
+                            Text("No words yet")
+                                .font(.system(size: 22, weight: .black, design: .rounded))
+                                .foregroundStyle(Color(hex: "#1A1A2E"))
+                            Text("Add words that appear when this room is detected")
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                .foregroundStyle(Color(hex: "#9CA3AF"))
+                                .multilineTextAlignment(.center)
+                        }
+                        Button { showAddWord = true } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "plus.circle.fill").font(.system(size: 16))
+                                Text("Add Word").font(.system(size: 16, weight: .black, design: .rounded))
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 32)
+                            .padding(.vertical, 14)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color(hex: "#FF9F43"), Color(hex: "#FF6B6B")],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .clipShape(Capsule())
+                            .shadow(color: Color(hex: "#FF9F43").opacity(0.4), radius: 12, x: 0, y: 6)
                         }
                     }
-                    AddWordCard(onTap: { showAddWord = true })
+                    .padding(.vertical, 40)
+                    .frame(maxWidth: .infinity)
+                } else {
+                    LazyVGrid(
+                        columns: Array(repeating: GridItem(.fixed(tileSize), spacing: 10), count: 8),
+                        spacing: 10
+                    ) {
+                        ForEach(words) { word in
+                            PictogramTile(
+                                word: Word(label: word.label),
+                                tileSize: tileSize,
+                                onTap: {}
+                            )
+                            .contextMenu {
+                                Button { editWord = word } label: { Label("Edit", systemImage: "pencil") }
+                                Button(role: .destructive) { deleteWord = word } label: { Label("Delete", systemImage: "trash") }
+                            }
+                        }
+                        AddWordCard(onTap: { showAddWord = true })
+                    }
+                    .padding(.horizontal, 16)
                 }
-                .padding(.horizontal, 16)
             }
             .frame(minHeight: 300)
         }

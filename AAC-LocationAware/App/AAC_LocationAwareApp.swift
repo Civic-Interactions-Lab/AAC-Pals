@@ -38,6 +38,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         #endif
 
         config.configure()
+        _ = SpeechManager.shared
         dependencies = Dependency(config)
         return true
     }
