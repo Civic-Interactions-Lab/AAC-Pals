@@ -2,6 +2,8 @@ import SwiftUI
 
 struct AdminRecentLogRow: View {
     let log: InteractionLog
+    let userName: String
+    let roomLabel: String
 
     var body: some View {
         HStack(spacing: 12) {
@@ -15,17 +17,24 @@ struct AdminRecentLogRow: View {
                 )
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(log.word)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color(hex: "#1A1A2E"))
-                Text(log.roomId.capitalized)
+                HStack(spacing: 4) {
+                    Text(log.word)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color(hex: "#1A1A2E"))
+                    Text("·")
+                        .foregroundStyle(Color(hex: "#9CA3AF"))
+                    Text(userName)
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color(hex: "#1A1A2E").opacity(0.7))
+                }
+                Text(roomLabel)
                     .font(.system(size: 12))
                     .foregroundStyle(Color(hex: "#1A1A2E").opacity(0.5))
             }
 
             Spacer()
 
-            Text(log.pressedAt.formatted(.relative(presentation: .named)))
+            Text(log.pressedAt, style: .time)
                 .font(.system(size: 11))
                 .foregroundStyle(Color(hex: "#1A1A2E").opacity(0.4))
         }
@@ -38,8 +47,16 @@ struct AdminRecentLogRow: View {
 
 #Preview {
     VStack(spacing: 8) {
-        AdminRecentLogRow(log: InteractionLog.make(userId: "u1", adminId: "a1", word: "hello", roomId: "kitchen"))
-        AdminRecentLogRow(log: InteractionLog.make(userId: "u2", adminId: "a1", word: "eat", roomId: "common"))
+        AdminRecentLogRow(
+            log: InteractionLog.make(userId: "u1", adminId: "a1", word: "hello", roomId: "kitchen"),
+            userName: "Alex",
+            roomLabel: "Kitchen"
+        )
+        AdminRecentLogRow(
+            log: InteractionLog.make(userId: "u2", adminId: "a1", word: "eat", roomId: "common"),
+            userName: "Jordan",
+            roomLabel: "Common Room"
+        )
     }
     .padding()
     .background(Color(hex: "#FFF7EE"))

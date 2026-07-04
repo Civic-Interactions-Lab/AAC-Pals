@@ -58,15 +58,18 @@ Update this file after every meaningful implementation change.
 
 ---
 
+- 11 — Admin Analytics Overhaul: `AdminView` injected with `AdminManager` environment and calls `adminManager.loadRooms(adminId:)` on load so room labels resolve correctly. Top Rooms ranked section now shows room label instead of raw UUID. Recent Activity redesigned from a flat word-tap list to a per-user-per-day summary: each row shows user avatar, name, word count for that day, most-used room, and last-seen time — `UserDaySummary` struct groups `interactionManager.logs` by `(userId, day)`. Activity chart overhauled: now uses all logs (not just `recentLogs` slice) and fills a fixed 14-day window with 0-count slots for days with no activity, so the chart always spans the full range. Two new Swift Charts charts added side by side below the activity chart: `wordsPerUserChart` (vertical bar per user, count annotation on top, red tint) and `roomUsageChart` (donut with 55% inner radius + legend showing room name and count, 5-color palette). `AdminRecentLogRow` updated with `userName` and `roomLabel` params — shows "word · user" headline with room label subtitle and `.time`-style timestamp.
+
+---
+
 ## In Progress
 
 - None.
 
 ## Next Up
 
-1. Interaction log viewer UI in Admin tab
-2. Admin password protection for Admin tab
-3. Admin analytics
+1. Admin password protection for Admin tab
+2. Student room access control
 
 ## Open Questions
 
