@@ -8,16 +8,13 @@ struct AppView: View {
         Group {
             if authManager.isLoading {
                 ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color(hex: "#FFF7EE"))
             } else if !authManager.isSignedIn {
-                LoginView()
-            } else if userManager.activeProfile == nil {
-                MainTabView()
+                Text("Login")
             } else {
                 BoardView()
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task { await authManager.loadCurrentUser() }
         .task(id: userManager.profiles.count) { await restoreActiveUser() }
         .preferredColorScheme(.light)

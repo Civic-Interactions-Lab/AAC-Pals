@@ -22,6 +22,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
     func application(
         _ application: UIApplication,
+        supportedInterfaceOrientationsFor window: UIWindow?
+    ) -> UIInterfaceOrientationMask {
+        return .landscape
+    }
+
+    func application(
+        _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         let config: BuildConfiguration
@@ -71,7 +78,7 @@ struct Dependency {
     init(_ config: BuildConfiguration) {
         switch config {
         case .mock:
-            self.authManager = AuthManager(service: MockAuthService(authUser: nil))
+            self.authManager = AuthManager(service: MockAuthService(authUser: .mock))
             self.userManager = UserManager(service: MockUserService())
             self.pictogramManager = PictogramManager(service: MockPictogramService())
             self.beaconManager = BeaconManager(service: MockBeaconService())

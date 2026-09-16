@@ -9,11 +9,10 @@ struct MockUserService: UserService {
 
     func loadProfiles(adminId: String) async -> [UserProfile] { initialProfiles }
 
-    func addProfile(displayName: String, passcode: String, adminId: String) async -> UserProfile? {
-        UserProfile(id: UUID().uuidString, displayName: displayName, role: .user, passcode: passcode)
+    func addProfile(displayName: String, adminId: String) async -> UserProfile? {
+        UserProfile(id: UUID().uuidString, displayName: displayName, role: .user)
     }
 
     func renameProfile(id: String, displayName: String) async {}
-    func updateProfile(id: String, displayName: String, passcode: String) async {}
     func deleteProfile(id: String) async {}
 }

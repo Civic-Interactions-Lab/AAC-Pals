@@ -5,18 +5,33 @@ enum FitzgeraldCategory {
 }
 
 extension FitzgeraldCategory {
+    static let legend: [FitzgeraldCategory] = [.noun, .pronoun, .verb, .adjective, .prepositionSocial, .question, .negation, .adverb]
+
+    var name: String {
+        switch self {
+        case .noun:              return "noun"
+        case .pronoun:           return "pronoun"
+        case .verb:              return "verb"
+        case .adjective:         return "describing"
+        case .prepositionSocial: return "social"
+        case .question:          return "question"
+        case .negation:          return "negation"
+        case .adverb:            return "adverb"
+        case .conjunction, .determiner: return "other"
+        }
+    }
+
     var color: Color {
         switch self {
-        case .noun:              return Color(hex: "#ff9c12")
-        case .pronoun:           return Color(hex: "#B8860B")
-        case .verb:              return Color(hex: "#3A8C1A")
-        case .adjective:         return Color(hex: "#64B9F7")
-        case .prepositionSocial: return Color(hex: "#FF8FD8")
-        case .question:          return Color(hex: "#A97BFF")
-        case .negation:          return Color(hex: "#FF5B5B")
-        case .adverb:            return Color(hex: "#C8A38B")
-        case .conjunction:       return Color.white
-        case .determiner:        return Color(hex: "#555555")
+        case .noun:              return .categoryNoun
+        case .pronoun:           return .categoryPronoun
+        case .verb:              return .categoryVerb
+        case .adjective:         return .categoryAdjective
+        case .prepositionSocial: return .categorySocial
+        case .question:          return .categoryQuestion
+        case .negation:          return .categoryNegation
+        case .adverb:            return .categoryAdverb
+        case .conjunction, .determiner: return .paper
         }
     }
 }

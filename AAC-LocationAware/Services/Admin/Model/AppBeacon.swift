@@ -46,6 +46,10 @@ struct AppBeacon: Identifiable, Equatable {
         }
     }
 
+    static let mockPairings: [String: [AppBeacon]] = [
+        "room-kitchen": [AppBeacon(id: "beacon-kitchen", adminId: "admin-1", roomId: "room-kitchen", beaconUuid: "Kitchen", label: "Kitchen beacon", radius: 2.0)]
+    ]
+
     static func mocks(for roomId: String) -> [AppBeacon] {
         [AppBeacon(id: "beacon-\(roomId)-1", adminId: "admin-1", roomId: roomId, beaconUuid: "550E8400-E29B-41D4-A716-44665544000\(roomId.hashValue % 9)", label: "Main beacon", radius: 2.0)]
     }

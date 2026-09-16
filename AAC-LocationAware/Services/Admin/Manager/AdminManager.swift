@@ -27,9 +27,21 @@ final class AdminManager {
         isLoading = false
     }
 
-    func addRoom(label: String, adminId: String) async {
-        guard let room = await service.addRoom(label: label, adminId: adminId) else { return }
+    @discardableResult
+    func addRoom(label: String, adminId: String) async -> Room? {
+        guard let room = await service.addRoom(label: label, adminId: adminId) else { return nil }
         rooms.append(room)
+        return room
+    }
+
+    /// Creates a room paired with a beacon. Rolls the room back if pairing fails.
+    func addRoom(label: String, pairedWith beaconId: String, adminId: String) async -> Bool {
+        guard let room = await addRoom(label: label, adminId: adminId) else { return false }
+        guard await addBeacon(beaconUuid: beaconId, label: label, radius: 2.0, roomId: room.id, adminId: adminId) != nil else {
+            await deleteRoom(id: room.id)
+            return false
+        }
+        return true
     }
 
     func updateRoom(id: String, label: String) async {
@@ -71,6 +83,13 @@ final class AdminManager {
 
     // MARK: - Beacons
 
+    /// A detected beacon matches a paired beacon by UUID or broadcast name.
+    func room(for detected: DetectedBeacon) -> Room? {
+        let ids = [detected.uuid, detected.name].compactMap { $0?.lowercased() }
+        guard let paired = beaconsByRoom.values.joined().first(where: { ids.contains($0.beaconUuid.lowercased()) }) else { return nil }
+        return rooms.first { $0.id == paired.roomId }
+    }
+
     func beacons(for roomId: String) -> [AppBeacon] {
         beaconsByRoom[roomId] ?? []
     }
@@ -88,9 +107,11 @@ final class AdminManager {
         beaconsByRoom[roomId] = await service.fetchBeacons(roomId: roomId)
     }
 
-    func addBeacon(beaconUuid: String, label: String, radius: Double, roomId: String, adminId: String) async {
-        guard let beacon = await service.addBeacon(beaconUuid: beaconUuid, label: label, radius: radius, roomId: roomId, adminId: adminId) else { return }
+    @discardableResult
+    func addBeacon(beaconUuid: String, label: String, radius: Double, roomId: String, adminId: String) async -> AppBeacon? {
+        guard let beacon = await service.addBeacon(beaconUuid: beaconUuid, label: label, radius: radius, roomId: roomId, adminId: adminId) else { return nil }
         beaconsByRoom[roomId, default: []].append(beacon)
+        return beacon
     }
 
     func updateBeacon(id: String, label: String, radius: Double, roomId: String) async {

@@ -1,6 +1,8 @@
 import Foundation
 import Observation
 
+let kActiveUserIdKey = "activeUserId"
+
 @MainActor
 @Observable
 class UserManager {
@@ -34,8 +36,8 @@ class UserManager {
         activeProfile = nil
     }
 
-    func addProfile(displayName: String, passcode: String, adminId: String) async {
-        guard let profile = await service.addProfile(displayName: displayName, passcode: passcode, adminId: adminId) else { return }
+    func addProfile(displayName: String, adminId: String) async {
+        guard let profile = await service.addProfile(displayName: displayName, adminId: adminId) else { return }
         profiles = await service.loadProfiles(adminId: adminId)
         _ = profile
     }
@@ -44,15 +46,6 @@ class UserManager {
         await service.renameProfile(id: id, displayName: displayName)
         profiles = await service.loadProfiles(adminId: adminId)
         if activeProfile?.id == id { activeProfile?.displayName = displayName }
-    }
-
-    func updateProfile(id: String, displayName: String, passcode: String, adminId: String) async {
-        await service.updateProfile(id: id, displayName: displayName, passcode: passcode)
-        profiles = await service.loadProfiles(adminId: adminId)
-        if activeProfile?.id == id {
-            activeProfile?.displayName = displayName
-            activeProfile?.passcode = passcode
-        }
     }
 
     func deleteProfile(id: String, adminId: String) async {

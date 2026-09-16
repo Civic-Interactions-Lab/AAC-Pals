@@ -5,7 +5,7 @@ final class MockAdminService: AdminService {
     private var words: [String: [RoomWord]]
     private var beacons: [String: [AppBeacon]]
 
-    init(rooms: [Room] = Room.mocks, beacons: [String: [AppBeacon]] = [:]) {
+    init(rooms: [Room] = Room.mocks, beacons: [String: [AppBeacon]] = AppBeacon.mockPairings) {
         self.rooms = rooms
         self.words = Dictionary(uniqueKeysWithValues: rooms.map { ($0.id, RoomWord.mocks(for: $0.id)) })
         self.beacons = beacons

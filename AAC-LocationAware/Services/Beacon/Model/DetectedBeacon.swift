@@ -8,6 +8,13 @@ struct DetectedBeacon: Identifiable {
     let minor: UInt16?
     let rssi: Int
 
+    /// The value a room stores to pair with this beacon: UUID, else broadcast name.
+    var pairingId: String? {
+        if let uuid, !uuid.isEmpty { return uuid }
+        if let name, !name.isEmpty { return name }
+        return nil
+    }
+
     var displayName: String {
         if let name, !name.isEmpty { return name }
         if let uuid { return String(uuid.prefix(18)) + "…" }

@@ -1,6 +1,13 @@
 import Foundation
 
 struct AACVocabulary {
+    static let defaultBoardWords: [Word] = [
+        Word(label: "I",   arasaacId: 6632),
+        Word(label: "You", arasaacId: 6625),
+        Word(label: "Yes", arasaacId: 5584),
+        Word(label: "No",  arasaacId: 5526),
+    ]
+
     static let coreWords: [Word] = [
         // Pronouns
         Word(label: "I",        arasaacId: 6632),
