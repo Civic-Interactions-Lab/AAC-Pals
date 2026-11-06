@@ -3,31 +3,35 @@ import Foundation
 let kBoardGridSizeKey = "boardGridSize"
 
 enum BoardGridSize: String, CaseIterable {
-    case roomy, medium, tight
+    case standard, roomy
 
     var title: String {
         switch self {
-        case .roomy:  "Roomy"
-        case .medium: "Medium"
-        case .tight:  "Tight"
+        case .standard: "Standard"
+        case .roomy:    "Roomy"
         }
     }
 
+    var subtitle: String { "\(columns) across" }
+
     var columns: Int {
         switch self {
-        case .roomy:  3
-        case .medium: 5
-        case .tight:  7
+        case .standard: 4
+        case .roomy:    2
         }
     }
 
     var panelColumns: Int {
         switch self {
-        case .roomy:  1
-        case .medium: 2
-        case .tight:  3
+        case .standard: 2
+        case .roomy:    1
         }
     }
 
-    var mainColumnsWithPanel: Int { panelColumns + 1 }
+    var tileAspect: CGFloat {
+        switch self {
+        case .standard: 169.0 / 177.0
+        case .roomy:    226.0 / 366.0
+        }
+    }
 }

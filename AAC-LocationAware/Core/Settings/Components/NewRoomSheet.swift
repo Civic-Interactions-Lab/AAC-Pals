@@ -8,6 +8,8 @@ struct NewRoomSheet: View {
 
     @State private var selected: DetectedBeacon?
     @State private var roomName = ""
+
+    var initialBeacon: DetectedBeacon?
     @State private var isSaving = false
     @State private var failed = false
     @FocusState private var nameFocused: Bool
@@ -29,7 +31,10 @@ struct NewRoomSheet: View {
         .background(Color.paper)
         .presentationBackground(Color.paper)
         .interactiveDismissDisabled(isSaving)
-        .onAppear { beaconManager.startScanning() }
+        .onAppear {
+            beaconManager.startScanning()
+            if let initialBeacon, selected == nil { choose(initialBeacon) }
+        }
     }
 
     // MARK: - Header
@@ -38,10 +43,10 @@ struct NewRoomSheet: View {
         HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(selected == nil ? "Find the beacon" : "Name the room")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(.fredoka(28))
                     .foregroundStyle(Color.ink)
                 Text(selected == nil ? "STEP 1 OF 2" : "STEP 2 OF 2")
-                    .font(.system(size: 11, weight: .heavy))
+                    .font(.figtree(11))
                     .tracking(1)
                     .foregroundStyle(Color.ink.opacity(0.86))
             }
@@ -69,14 +74,14 @@ struct NewRoomSheet: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("Stand next to the beacon in the room you're adding, then tap it. The closest beacon is at the top.")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.figtree(14, .semibold))
                     .foregroundStyle(Color.ink.opacity(0.86))
 
                 if available.isEmpty {
                     HStack(spacing: 10) {
                         ProgressView().tint(Color.ink)
                         Text("Listening for new beacons…")
-                            .font(.system(size: 15, weight: .bold))
+                            .font(.figtree(15, .bold))
                             .foregroundStyle(Color.ink)
                     }
                     .frame(maxWidth: .infinity)
@@ -88,7 +93,7 @@ struct NewRoomSheet: View {
                         VStack(spacing: 10) {
                             ForEach(available) { beacon in
                                 Button { choose(beacon) } label: {
-                                    HeardBeaconRow(beacon: beacon, room: nil, isInRange: true, actionTitle: "Use it")
+                                    HeardBeaconRow(beacon: beacon, room: nil, isInRange: true, onUse: { choose(beacon) })
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -97,7 +102,7 @@ struct NewRoomSheet: View {
                 }
 
                 Text("Beacons already paired with a room aren't shown.")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.figtree(12, .semibold))
                     .foregroundStyle(Color.ink.opacity(0.86))
             }
         }
@@ -110,7 +115,7 @@ struct NewRoomSheet: View {
             VStack(alignment: .leading, spacing: 5) {
                 fieldLabel("ROOM NAME")
                 TextField("e.g. Kitchen", text: $roomName)
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.fredoka(22))
                     .foregroundStyle(Color.ink)
                     .focused($nameFocused)
                     .submitLabel(.done)
@@ -133,7 +138,7 @@ struct NewRoomSheet: View {
                         .frame(width: 12, height: 12)
                         .overlay(Circle().strokeBorder(Color.ink, lineWidth: 2))
                     Text("Heard now · \(beacon.rssi) dBm")
-                        .font(.system(size: 13, weight: .bold))
+                        .font(.figtree(13, .bold))
                         .foregroundStyle(Color.ink.opacity(0.88))
                 }
                 .padding(.top, 4)
@@ -145,12 +150,12 @@ struct NewRoomSheet: View {
             .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.ink, lineWidth: 2))
 
             Text("When the iPad hears this beacon, the board shows this room's words.")
-                .font(.system(size: 12, weight: .semibold))
+                .font(.figtree(12, .semibold))
                 .foregroundStyle(Color.ink.opacity(0.86))
 
             if failed {
                 Text("Couldn't create the room. Try again.")
-                    .font(.system(size: 13, weight: .heavy))
+                    .font(.figtree(13))
                     .foregroundStyle(Color.ink)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
@@ -163,7 +168,7 @@ struct NewRoomSheet: View {
             HStack(spacing: 12) {
                 Button { selected = nil; failed = false } label: {
                     Text("Back")
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .font(.fredoka(20))
                         .foregroundStyle(Color.ink)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
@@ -178,7 +183,7 @@ struct NewRoomSheet: View {
                         if isSaving { ProgressView().tint(.white) }
                         Text("Create room")
                     }
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.fredoka(20))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
@@ -222,7 +227,7 @@ struct NewRoomSheet: View {
 
     private func fieldLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 10, weight: .heavy))
+            .font(.figtree(10))
             .tracking(1)
             .foregroundStyle(Color.ink.opacity(0.86))
     }
@@ -230,7 +235,7 @@ struct NewRoomSheet: View {
     private func squareButton(_ systemName: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: 18, weight: .bold))
+                .font(.figtree(18, .bold))
                 .foregroundStyle(Color.ink)
                 .frame(width: 48, height: 48)
                 .background(Color.paper, in: RoundedRectangle(cornerRadius: 16))

@@ -14,9 +14,20 @@ final class InteractionManager {
         self.service = service
     }
 
-    func logWord(_ word: Word, userId: String, adminId: String, roomId: String) {
+    func logWord(_ word: Word, user: UserProfile, adminId: String, room: Room?, beacon: DetectedBeacon?, section: BoardSection) {
+        let entry = InteractionLog.make(
+            userId: user.id,
+            userName: user.displayName,
+            adminId: adminId,
+            word: word.label,
+            roomId: room?.id,
+            roomLabel: room?.label,
+            boardSection: section,
+            beacon: room == nil ? nil : beacon,
+            device: .current
+        )
         Task {
-            await service.log(userId: userId, adminId: adminId, word: word.label, roomId: roomId)
+            await service.log(entry)
         }
     }
 

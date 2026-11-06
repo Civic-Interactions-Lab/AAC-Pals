@@ -1,43 +1,35 @@
 import SwiftUI
 
-/// Header chip for the detected room: a live badge while the panel is open,
-/// a button to reopen it while closed.
 struct RoomChip: View {
-    let room: Room
-    let wordCount: Int
-    let isPanelOpen: Bool
-    let onOpen: () -> Void
+    let room: Room?
 
     var body: some View {
-        if isPanelOpen {
-            HStack(spacing: 9) {
+        HStack(spacing: 8) {
+            if room != nil {
                 PulsingDot()
-                Text("\(room.label.uppercased()) · IN RANGE")
-                    .font(.system(size: 13, weight: .heavy))
-                    .tracking(0.8)
-                    .foregroundStyle(Color.ink)
-                    .lineLimit(1)
+            } else {
+                Circle()
+                    .fill(Color.ink.opacity(0.3))
+                    .frame(width: 9, height: 9)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.signalGreen, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.ink, lineWidth: 2))
-        } else {
-            Button(action: onOpen) {
-                Text("\(room.label.uppercased()) WORDS (\(wordCount)) ›")
-                    .font(.system(size: 12, weight: .heavy))
-                    .tracking(0.7)
-                    .foregroundStyle(Color.ink)
-                    .lineLimit(1)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 9)
-                    .background(Color.signalGreen, in: Capsule())
-                    .overlay(Capsule().strokeBorder(Color.ink, lineWidth: 2))
-                    .contentShape(Capsule())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Show \(room.label) words")
+
+            Text(room?.label.uppercased() ?? "NO ROOM NEARBY")
+                .font(.figtree(12))
+                .tracking(0.7)
+                .foregroundStyle(room != nil ? Color.ink : Color.ink.opacity(0.6))
+                .lineLimit(1)
         }
+        .padding(.horizontal, 13)
+        .padding(.vertical, 6)
+        .background {
+            if room != nil {
+                Capsule().fill(Color.signalGreen)
+                Capsule().strokeBorder(Color.ink, lineWidth: 2)
+            } else {
+                Capsule().strokeBorder(Color.ink.opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [6, 5]))
+            }
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -47,7 +39,7 @@ private struct PulsingDot: View {
     var body: some View {
         Circle()
             .fill(Color.ink)
-            .frame(width: 11, height: 11)
+            .frame(width: 9, height: 9)
             .scaleEffect(pulsing ? 1.45 : 1)
             .opacity(pulsing ? 0.45 : 1)
             .onAppear {
@@ -59,8 +51,8 @@ private struct PulsingDot: View {
 
 #Preview {
     VStack {
-        RoomChip(room: Room.mocks[0], wordCount: 13, isPanelOpen: true, onOpen: {})
-        RoomChip(room: Room.mocks[0], wordCount: 13, isPanelOpen: false, onOpen: {})
+        RoomChip(room: Room.mocks[0])
+        RoomChip(room: nil)
     }
     .padding()
     .background(Color.butter)

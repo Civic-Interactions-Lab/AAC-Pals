@@ -1,61 +1,59 @@
 import SwiftUI
 
-struct RoomPanel: View {
-    static let horizontalInset: CGFloat = 12
+struct BoardCard<Content: View>: View {
+    static var inset: CGFloat { 12 }
 
-    let room: Room
-    let words: [Word]
-    let tileSize: CGFloat
-    let columns: Int
-    let spacing: CGFloat
-    let onTap: (Word) -> Void
-    let onHide: () -> Void
+    @ViewBuilder var content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 11) {
-            HStack(spacing: 8) {
-                Text("\(room.label.uppercased()) WORDS")
-                    .font(.system(size: 11, weight: .heavy))
-                    .tracking(1)
-                    .foregroundStyle(Color.ink.opacity(0.86))
-                    .lineLimit(1)
+        content
+            .padding(Self.inset)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .sticker(.butter, radius: 20)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+    }
+}
 
-                Spacer(minLength: 8)
+struct RoomPanel: View {
+    let room: Room?
+    let words: [Word]
+    let columns: Int
+    let rowHeight: CGFloat
+    let labelSize: CGFloat
+    let onTap: (Word) -> Void
 
-                Button(action: onHide) {
-                    Text("HIDE ‹")
-                        .font(.system(size: 11, weight: .heavy))
-                        .foregroundStyle(Color.ink)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(Color.paper, in: Capsule())
-                        .overlay(Capsule().strokeBorder(Color.ink, lineWidth: 2))
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Hide \(room.label) words")
-            }
-
-            if words.isEmpty {
-                Text("No words for this room yet.")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color.ink.opacity(0.7))
-                Spacer()
+    var body: some View {
+        BoardCard {
+            if let room, !words.isEmpty {
+                WordGrid(words: words, columns: columns, rowHeight: rowHeight, labelSize: labelSize, onTap: onTap)
+                    .accessibilityLabel("\(room.label) words")
+            } else if room != nil {
+                Caption("No words for this room yet.", size: 14)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                WordGrid(words: words, tileSize: tileSize, columns: columns, spacing: spacing, onTap: onTap)
+                emptyState
             }
         }
-        .padding(.horizontal, Self.horizontalInset)
-        .padding(.vertical, 13)
-        .frame(maxHeight: .infinity, alignment: .top)
-        .background(Color.butter, in: RoundedRectangle(cornerRadius: 20))
-        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(Color.ink, lineWidth: 2))
+    }
+
+    private var emptyState: some View {
+        Image(systemName: "wifi.slash")
+            .font(.system(size: 34, weight: .medium))
+            .foregroundStyle(Color.ink.opacity(0.35))
+            .frame(width: 92, height: 92)
+            .dashedOutline(radius: 26)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .accessibilityLabel("No room nearby")
     }
 }
 
 #Preview {
-    RoomPanel(room: Room.mocks[0], words: AACVocabulary.defaultBoardWords, tileSize: 180, columns: 2, spacing: 12, onTap: { _ in }, onHide: {})
-        .frame(width: 420, height: 700)
-        .padding()
-        .environment(PictogramManager(service: MockPictogramService()))
+    HStack {
+        RoomPanel(room: Room.mocks[0], words: AACVocabulary.roomWords["kitchen"] ?? [], columns: 2, rowHeight: 165, labelSize: 36, onTap: { _ in })
+        RoomPanel(room: nil, words: [], columns: 2, rowHeight: 165, labelSize: 36, onTap: { _ in })
+    }
+    .frame(width: 760, height: 600)
+    .padding()
+    .background(Color.paper)
+    .environment(PictogramManager(service: MockPictogramService()))
 }

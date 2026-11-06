@@ -3,10 +3,9 @@ import Foundation
 final class MockInteractionService: InteractionService {
     private(set) var logs: [InteractionLog] = []
 
-    func log(userId: String, adminId: String, word: String, roomId: String) async {
-        let entry = InteractionLog.make(userId: userId, adminId: adminId, word: word, roomId: roomId)
-        logs.append(entry)
-        print("[MockInteraction] \(word) — room: \(roomId) user: \(userId)")
+    func log(_ entry: InteractionLog) async {
+        logs.insert(entry, at: 0)
+        print("[MockInteraction] \(entry.word) (\(entry.wordCategory ?? "-"), \(entry.boardSection?.rawValue ?? "-")) — \(entry.userName ?? entry.userId) in \(entry.roomLabel ?? "no room") via \(entry.beaconId ?? "no beacon") on \(entry.deviceName ?? "-") \(entry.deviceModel ?? "")")
     }
 
     func fetchLogs(adminId: String, limit: Int = 100) async -> [InteractionLog] {

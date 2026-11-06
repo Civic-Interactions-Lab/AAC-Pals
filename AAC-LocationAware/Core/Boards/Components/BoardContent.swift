@@ -1,50 +1,47 @@
 import SwiftUI
 
-/// With the panel closed the board shows `gridSize.columns` per row. With it open,
-/// the panel and main grid split those columns and one shared tile size fills the width.
 struct BoardContent: View {
     let words: [Word]
     let room: Room?
     let roomWords: [Word]
     let gridSize: BoardGridSize
     let onTap: (Word) -> Void
-    let onHidePanel: () -> Void
 
-    private let spacing: CGFloat = 20
-    private let gap: CGFloat = 20
+    private let gap: CGFloat = 16
+    private let spacing: CGFloat = 12
 
     var body: some View {
         GeometryReader { proxy in
-            let width = proxy.size.width
+            let panelColumns = gridSize.panelColumns
+            let mainColumns = panelColumns * 2
+            let inset = BoardCard<EmptyView>.inset
+            let fixed = inset * 4 + gap + spacing * CGFloat(panelColumns - 1 + mainColumns - 1)
+            let tileWidth = max((proxy.size.width - fixed) / CGFloat(panelColumns + mainColumns), 1)
+            let viewport = max(proxy.size.height - inset * 2 - WordGrid.shadowRoom, 1)
+            let idealRowHeight = tileWidth * gridSize.tileAspect
+            let visibleRows = max(1, Int(((viewport + spacing) / (idealRowHeight + spacing)).rounded()))
+            let rowHeight = (viewport - spacing * CGFloat(visibleRows - 1)) / CGFloat(visibleRows)
+            let labelSize = min(44, max(22, min(tileWidth, rowHeight) * 0.2))
+            let panelWidth = tileWidth * CGFloat(panelColumns) + spacing * CGFloat(panelColumns - 1) + inset * 2
+            let mainWidth = max(proxy.size.width - panelWidth - gap, 0)
 
-            if let room {
-                let panelColumns = gridSize.panelColumns
-                let mainColumns = gridSize.mainColumnsWithPanel
-                let fixed = RoomPanel.horizontalInset * 2 + gap + spacing * CGFloat(panelColumns - 1 + mainColumns - 1)
-                let tileSize = (width - fixed) / CGFloat(panelColumns + mainColumns)
-                let panelWidth = CGFloat(panelColumns) * tileSize + CGFloat(panelColumns - 1) * spacing + RoomPanel.horizontalInset * 2
-
-                HStack(alignment: .top, spacing: gap) {
-                    RoomPanel(
-                        room: room,
-                        words: roomWords,
-                        tileSize: tileSize,
-                        columns: panelColumns,
-                        spacing: spacing,
-                        onTap: onTap,
-                        onHide: onHidePanel
-                    )
+            HStack(alignment: .top, spacing: gap) {
+                RoomPanel(room: room, words: roomWords, columns: panelColumns, rowHeight: rowHeight, labelSize: labelSize, onTap: onTap)
                     .frame(width: panelWidth)
-                    .transition(.move(edge: .leading).combined(with: .opacity))
 
-                    WordGrid(words: words, tileSize: tileSize, columns: mainColumns, spacing: spacing, onTap: onTap)
+                BoardCard {
+                    WordGrid(words: words, columns: mainColumns, rowHeight: rowHeight, labelSize: labelSize, spacing: spacing, onTap: onTap)
                 }
-            } else {
-                let columns = gridSize.columns
-                let tileSize = (width - spacing * CGFloat(columns - 1)) / CGFloat(columns)
-
-                WordGrid(words: words, tileSize: tileSize, columns: columns, spacing: spacing, onTap: onTap)
+                .frame(width: mainWidth)
             }
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
         }
     }
+}
+
+#Preview {
+    BoardContent(words: AACVocabulary.defaultBoardWords, room: Room.mocks[0], roomWords: AACVocabulary.roomWords["kitchen"] ?? [], gridSize: .standard, onTap: { _ in })
+        .padding()
+        .background(Color.paper)
+        .environment(PictogramManager(service: MockPictogramService()))
 }

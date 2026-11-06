@@ -2,43 +2,49 @@ import SwiftUI
 
 struct EditorWordTile: View {
     let word: Word
-    let position: Int
+    var position: Int?
+    var onRemove: (() -> Void)?
 
     private var category: FitzgeraldCategory { fitzgeraldCategory(for: word.label) }
 
     var body: some View {
         VStack(spacing: 0) {
-            PictogramImage(word: word, fallbackSize: 34)
+            PictogramImage(word: word, fallbackSize: 36)
                 .padding(7)
 
-            VStack(alignment: .leading, spacing: 0) {
-                Text("\(position) · \(category.name)")
-                    .font(.system(size: 9, weight: .heavy))
-                    .foregroundStyle(Color.ink.opacity(0.86))
+            VStack(alignment: position == nil ? .center : .leading, spacing: 0) {
+                if let position {
+                    Text("\(position) · \(category.group.name)")
+                        .font(.figtree(9))
+                        .foregroundStyle(Color.ink.opacity(0.86))
+                }
 
                 Text(word.label)
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.fredoka(20))
                     .foregroundStyle(Color.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: position == nil ? .center : .leading)
             .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(category.color)
-            .overlay(alignment: .top) {
-                Rectangle().fill(Color.ink).frame(height: 2)
+            .padding(.bottom, 7)
+        }
+        .sticker(category.color, radius: 16)
+        .overlay(alignment: .topTrailing) {
+            if let onRemove {
+                RemoveBadge(label: word.label, action: onRemove)
+                    .padding(5)
             }
         }
-        .background(Color.paper)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.ink, lineWidth: 2))
     }
 }
 
 #Preview {
-    EditorWordTile(word: AACVocabulary.defaultBoardWords[0], position: 1)
-        .frame(width: 140, height: 150)
-        .padding()
-        .environment(PictogramManager(service: MockPictogramService()))
+    HStack {
+        EditorWordTile(word: AACVocabulary.defaultBoardWords[2], position: 3)
+        EditorWordTile(word: Word(label: "milk"), onRemove: {})
+    }
+    .frame(width: 300, height: 150)
+    .padding()
+    .environment(PictogramManager(service: MockPictogramService()))
 }

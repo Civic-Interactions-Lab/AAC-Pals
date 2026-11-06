@@ -2,39 +2,30 @@ import SwiftUI
 
 struct BoardHeader: View {
     let kidName: String
+    var avatarColor: Color = .categoryQuestion
     let room: Room?
-    let roomWordCount: Int
-    let isPanelOpen: Bool
-    let sentence: [Word]
-    let onOpenPanel: () -> Void
-    let onSpeak: () -> Void
-    let onDeleteLast: () -> Void
+    let onProfiles: () -> Void
     let onSettings: () -> Void
 
     var body: some View {
-        HStack(spacing: 14) {
-            KidChip(name: kidName)
+        HStack(spacing: 12) {
+            KidChip(name: kidName, avatarColor: avatarColor, onTap: onProfiles)
+            RoomChip(room: room)
+
+            Spacer(minLength: 12)
 
             Button(action: onSettings) {
                 Image(systemName: "gearshape.fill")
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(Color.ink)
-                    .frame(width: 48, height: 48)
-                    .background(Color.paper, in: RoundedRectangle(cornerRadius: 16))
-                    .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.ink, lineWidth: 2))
+                    .frame(width: 38, height: 38)
+                    .sticker(.paper, radius: 12)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Settings")
-
-            if let room {
-                RoomChip(room: room, wordCount: roomWordCount, isPanelOpen: isPanelOpen, onOpen: onOpenPanel)
-            }
-
-            Spacer(minLength: 14)
-            SentenceStrip(sentence: sentence, onSpeak: onSpeak, onDeleteLast: onDeleteLast)
         }
-        .padding(.horizontal, 22)
-        .padding(.vertical, 16)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 10)
         .background(Color.butter)
         .overlay(alignment: .bottom) {
             Rectangle().fill(Color.ink).frame(height: 2)
@@ -43,5 +34,8 @@ struct BoardHeader: View {
 }
 
 #Preview {
-    BoardHeader(kidName: "Katerina", room: Room.mocks[0], roomWordCount: 13, isPanelOpen: true, sentence: AACVocabulary.defaultBoardWords, onOpenPanel: {}, onSpeak: {}, onDeleteLast: {}, onSettings: {})
+    VStack(spacing: 0) {
+        BoardHeader(kidName: "Katerina", room: Room.mocks[0], onProfiles: {}, onSettings: {})
+        BoardHeader(kidName: "Katerina", room: nil, onProfiles: {}, onSettings: {})
+    }
 }

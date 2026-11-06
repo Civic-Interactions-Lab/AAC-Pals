@@ -4,7 +4,7 @@ struct HeardBeaconRow: View {
     let beacon: DetectedBeacon
     let room: Room?
     let isInRange: Bool
-    var actionTitle: String? = nil
+    var onUse: (() -> Void)? = nil
 
     private var bars: Int {
         switch beacon.rssi {
@@ -15,9 +15,11 @@ struct HeardBeaconRow: View {
         }
     }
 
-    private var match: String {
-        guard let room else { return "no room uses this ID" }
-        return isInRange ? room.label : "\(room.label) · too far"
+    private var detail: String {
+        if let room { return isInRange ? "\(room.label) · in range" : "\(room.label) · too far" }
+        if !isInRange { return "too far to pair" }
+        if beacon.name?.isEmpty ?? true, beacon.major != nil { return "iBeacon, no name" }
+        return "no room uses this ID"
     }
 
     var body: some View {
@@ -34,13 +36,13 @@ struct HeardBeaconRow: View {
             .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(beacon.displayName)
+                Text(BeaconID.display(beacon))
                     .font(.system(size: 15, weight: .heavy, design: .monospaced))
                     .foregroundStyle(Color.ink)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Text("\(match) · \(beacon.rssi) dBm")
-                    .font(.system(size: 11, weight: .semibold))
+                Text(detail)
+                    .font(.figtree(11, .semibold))
                     .foregroundStyle(Color.ink.opacity(0.86))
             }
 
@@ -50,38 +52,46 @@ struct HeardBeaconRow: View {
         }
         .padding(.horizontal, 13)
         .padding(.vertical, 10)
-        .background(room != nil && isInRange ? Color.butter : Color.paper, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.ink, lineWidth: 2))
+        .sticker(rowFill, radius: 16)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var rowFill: Color {
+        if !isInRange { return Color.ink.opacity(0.06) }
+        return room != nil ? .butter : .paper
     }
 
     @ViewBuilder
     private var statusPill: some View {
-        if let actionTitle {
-            pill(actionTitle, foreground: .white, background: .actionBlue)
-        } else if room == nil {
-            pill("Not linked", foreground: .ink, background: .paper)
-        } else if isInRange {
+        if room != nil, isInRange {
             pill("Linked", foreground: .white, background: .ink)
+        } else if !isInRange {
+            pill("Too far", foreground: Color.ink.opacity(0.55), background: Color.ink.opacity(0.08))
+        } else if let onUse {
+            Button(action: onUse) {
+                pill("Use it", foreground: .white, background: .actionBlue)
+            }
+            .buttonStyle(.plain)
         } else {
-            pill("Too far", foreground: Color.shade.opacity(0.55), background: Color.shade.opacity(0.1))
+            pill("Not linked", foreground: .ink, background: .paper)
         }
     }
 
     private func pill(_ text: String, foreground: Color, background: Color) -> some View {
         Text(text)
-            .font(.system(size: 11, weight: .heavy))
+            .font(.figtree(11))
             .foregroundStyle(foreground)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .background(background, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.ink, lineWidth: 2))
+            .sticker(background, radius: 16)
     }
 }
 
 #Preview {
     VStack {
         HeardBeaconRow(beacon: DetectedBeacon(uuid: nil, name: "Kitchen", major: nil, minor: nil, rssi: -58), room: Room.mocks[0], isInRange: true)
-        HeardBeaconRow(beacon: DetectedBeacon(uuid: nil, name: "playroom", major: nil, minor: nil, rssi: -66), room: nil, isInRange: true)
+        HeardBeaconRow(beacon: DetectedBeacon(uuid: nil, name: "playroom", major: nil, minor: nil, rssi: -66), room: nil, isInRange: true, onUse: {})
+        HeardBeaconRow(beacon: DetectedBeacon(uuid: nil, name: "hallway", major: nil, minor: nil, rssi: -88), room: nil, isInRange: false)
     }
     .frame(width: 392)
     .padding()

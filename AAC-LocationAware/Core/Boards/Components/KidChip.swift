@@ -2,28 +2,31 @@ import SwiftUI
 
 struct KidChip: View {
     let name: String
+    var avatarColor: Color = .categoryQuestion
+    let onTap: () -> Void
 
     var body: some View {
-        HStack(spacing: 11) {
-            Text(name.prefix(1).uppercased())
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.ink)
-                .frame(width: 42, height: 42)
-                .background(Color.categoryQuestion, in: Circle())
-                .overlay(Circle().strokeBorder(Color.ink, lineWidth: 2))
+        Button(action: onTap) {
+            HStack(spacing: 9) {
+                AvatarCircle(name: name, color: avatarColor, size: 32)
 
-            Text(name)
-                .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.ink)
+                Text(name)
+                    .font(.fredoka(18))
+                    .foregroundStyle(Color.ink)
+                    .lineLimit(1)
+            }
+            .padding(.leading, 4)
+            .padding(.trailing, 13)
+            .padding(.vertical, 4)
+            .background(Color.paper, in: Capsule())
+            .overlay(Capsule().strokeBorder(Color.ink, lineWidth: 2))
+            .contentShape(Capsule())
         }
-        .padding(.leading, 7)
-        .padding(.trailing, 14)
-        .padding(.vertical, 6)
-        .background(Color.paper, in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Color.ink, lineWidth: 2))
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(name). Switch profile")
     }
 }
 
 #Preview {
-    KidChip(name: "Katerina").padding().background(Color.butter)
+    KidChip(name: "Katerina", onTap: {}).padding().background(Color.butter)
 }

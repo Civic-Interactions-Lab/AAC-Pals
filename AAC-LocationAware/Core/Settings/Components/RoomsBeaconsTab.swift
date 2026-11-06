@@ -5,49 +5,30 @@ struct RoomsBeaconsTab: View {
     @Environment(AdminManager.self) private var adminManager
     @Environment(BeaconManager.self) private var beaconManager
 
-    @State private var showNewRoom = false
+    let onEdit: (Room) -> Void
+    let onUseBeacon: (DetectedBeacon) -> Void
 
     var body: some View {
         // BeaconManager.scannedBeacons isn't observable, so re-read it periodically.
         TimelineView(.periodic(from: .now, by: 2)) { _ in
             let heard = beaconManager.scannedBeacons.sorted { $0.rssi > $1.rssi }
 
-            VStack(spacing: 16) {
-                HStack {
-                    Spacer()
-                    Button { showNewRoom = true } label: {
-                        Label("NEW ROOM", systemImage: "plus")
-                            .font(.system(size: 13, weight: .heavy))
-                            .tracking(0.6)
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(Color.actionBlue, in: RoundedRectangle(cornerRadius: 16))
-                            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.ink, lineWidth: 2))
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                HStack(alignment: .top, spacing: 18) {
-                    roomsColumn(heard: heard)
-                    beaconsColumn(heard: heard)
-                }
+            HStack(alignment: .top, spacing: 18) {
+                roomsColumn(heard: heard)
+                beaconsColumn(heard: heard)
             }
-            .padding(.horizontal, 22)
+            .padding(.horizontal, 20)
             .padding(.vertical, 18)
-        }
-        .sheet(isPresented: $showNewRoom) {
-            NewRoomSheet()
         }
         .task { await load() }
     }
 
     private func roomsColumn(heard: [DetectedBeacon]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionLabel("ROOMS")
+            SectionLabel("Rooms")
 
             if adminManager.rooms.isEmpty {
-                emptyText("No rooms yet.")
+                Caption("No rooms yet. Tap + NEW ROOM to add one.", size: 14)
             }
 
             ScrollView(showsIndicators: false) {
@@ -57,10 +38,12 @@ struct RoomsBeaconsTab: View {
                             room: room,
                             wordCount: adminManager.words(for: room.id).count,
                             beacons: adminManager.beacons(for: room.id),
-                            isInRange: heard.contains { isInRange($0) && adminManager.room(for: $0)?.id == room.id }
+                            isInRange: heard.contains { isInRange($0) && adminManager.room(for: $0)?.id == room.id },
+                            onEdit: { onEdit(room) }
                         )
                     }
                 }
+                .padding(2)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -68,42 +51,36 @@ struct RoomsBeaconsTab: View {
 
     private func beaconsColumn(heard: [DetectedBeacon]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionLabel("HEARD RIGHT NOW")
+            SectionLabel("Heard right now")
 
             if heard.isEmpty {
-                emptyText("Listening for beacons…")
+                Caption("Listening for beacons…", size: 14)
             }
 
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 10) {
                     ForEach(heard) { beacon in
-                        HeardBeaconRow(beacon: beacon, room: adminManager.room(for: beacon), isInRange: isInRange(beacon))
+                        let room = adminManager.room(for: beacon)
+                        HeardBeaconRow(
+                            beacon: beacon,
+                            room: room,
+                            isInRange: isInRange(beacon),
+                            onUse: room == nil && beacon.pairingId != nil ? { onUseBeacon(beacon) } : nil
+                        )
                     }
                 }
-            }
+                .padding(2)
 
-            Text("A room's Beacon ID is the pairing — it just has to match what the beacon broadcasts.")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Color.ink.opacity(0.86))
+                Caption("A room's Beacon ID is the pairing — it just has to match what the beacon broadcasts.")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 8)
+            }
         }
         .frame(width: 392)
     }
 
     private func isInRange(_ beacon: DetectedBeacon) -> Bool {
         beacon.rssi >= DetectionRadius.medium.rssi
-    }
-
-    private func sectionLabel(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 11, weight: .heavy))
-            .tracking(1)
-            .foregroundStyle(Color.ink.opacity(0.86))
-    }
-
-    private func emptyText(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(Color.ink.opacity(0.7))
     }
 
     private func load() async {
@@ -118,7 +95,7 @@ struct RoomsBeaconsTab: View {
 }
 
 #Preview {
-    RoomsBeaconsTab()
+    RoomsBeaconsTab(onEdit: { _ in }, onUseBeacon: { _ in })
         .background(Color.paper)
         .previewAllEnvironments()
 }

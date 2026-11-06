@@ -3,8 +3,8 @@ import Supabase
 
 final class SupabaseInteractionService: InteractionService {
 
-    func log(userId: String, adminId: String, word: String, roomId: String) async {
-        let row = InteractionLog.make(userId: userId, adminId: adminId, word: word, roomId: roomId).toRow()
+    func log(_ entry: InteractionLog) async {
+        let row = entry.toRow()
         do {
             try await supabase.from("interaction_logs").insert(row).execute()
         } catch {

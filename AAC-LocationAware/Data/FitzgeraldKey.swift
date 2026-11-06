@@ -4,9 +4,31 @@ enum FitzgeraldCategory {
     case noun, pronoun, verb, adjective, prepositionSocial, question, negation, adverb, conjunction, determiner
 }
 
-extension FitzgeraldCategory {
-    static let legend: [FitzgeraldCategory] = [.noun, .pronoun, .verb, .adjective, .prepositionSocial, .question, .negation, .adverb]
+enum WordGroup: CaseIterable {
+    case verbs, nouns, descriptors, social, other
 
+    var name: String {
+        switch self {
+        case .verbs:       "verbs"
+        case .nouns:       "nouns"
+        case .descriptors: "descriptors"
+        case .social:      "social"
+        case .other:       "other"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .verbs:       .categoryVerb
+        case .nouns:       .categoryNoun
+        case .descriptors: .categoryAdjective
+        case .social:      .categorySocial
+        case .other:       .categoryNegation
+        }
+    }
+}
+
+extension FitzgeraldCategory {
     var name: String {
         switch self {
         case .noun:              return "noun"
@@ -18,6 +40,16 @@ extension FitzgeraldCategory {
         case .negation:          return "negation"
         case .adverb:            return "adverb"
         case .conjunction, .determiner: return "other"
+        }
+    }
+
+    var group: WordGroup {
+        switch self {
+        case .verb:                   return .verbs
+        case .noun, .pronoun:         return .nouns
+        case .adjective:              return .descriptors
+        case .prepositionSocial:      return .social
+        case .question, .negation, .adverb, .conjunction, .determiner: return .other
         }
     }
 
@@ -36,53 +68,42 @@ extension FitzgeraldCategory {
     }
 }
 
+private let negationWords: Set<String> = ["no", "not", "stop", "help", "more", "all done", "finished", "don't", "can't", "won't", "never", "wait", "done"]
 private let pronounWords: Set<String> = [
-    "i","me","my","mine","you","your","yours","we","us","our","ours",
-    "he","him","his","she","her","hers","it","its","they","them","their","theirs",
-    "this","that","these","those","here","there"
+    "i", "me", "my", "mine", "you", "your", "yours", "we", "us", "our", "ours",
+    "he", "him", "his", "she", "her", "hers", "it", "its", "they", "them", "their", "theirs", "that", "this"
 ]
 private let verbWords: Set<String> = [
-    "want","need","go","stop","help","eat","drink","play","read","walk","sleep",
-    "listen","watch","cook","wash","brush","shower","wake","talk","write","run",
-    "swing","look","sit","hug","relax"
+    "want", "need", "like", "go", "eat", "drink", "wash", "sleep", "play", "read", "cook", "watch", "run", "walk",
+    "brush teeth", "wash hands", "wake up", "listen", "write", "swing", "slide", "hug",
+    "look", "sit", "talk", "relax", "come", "give", "open", "close", "put", "make", "turn", "do", "go home",
+    "get", "can", "is", "have", "see", "take", "feel", "think", "know", "say"
 ]
 private let adjectiveWords: Set<String> = [
-    "big","small","little","new","old","good","bad","fast","slow","long","short",
-    "empty","full","clean","dirty","happy","sad","tired","hungry","thirsty","sick",
-    "excited","scared","hot","cold","quiet","loud","light","dark"
+    "hungry", "thirsty", "tired", "hot", "cold", "quiet",
+    "big", "small", "little", "good", "bad", "fast", "slow", "happy", "sad", "angry", "mad", "scared", "sick", "hurt", "loud",
+    "all", "some", "different", "same"
 ]
-private let adverbWords: Set<String> = ["quickly","slowly","quietly","loudly","really","very","too","away","back"]
-private let questionWords: Set<String> = ["what","where","when","why","who","how","which"]
-private let negationWords: Set<String> = ["no","not","don't","can't","won't","never","stop","wait","help","more","done","all done"]
-private let conjunctionWords: Set<String> = ["and","or","but","because","then"]
-private let determinerWords: Set<String> = ["the","a","an","this","that","these","those","some","any","my","your","his","her","our","their"]
-private let socialWords: Set<String> = ["hello","please","thank you","yes","in","on","under","over","here","there","together","with","for","from"]
-
-private let explicitOverrides: [String: FitzgeraldCategory] = [
-    "i want": .verb, "i need": .verb, "go home": .verb,
-    "watch tv": .verb, "wash hands": .verb, "brush teeth": .verb, "wake up": .verb,
-    "light on": .adjective, "light off": .adjective,
-    "all done": .negation, "thank you": .prepositionSocial, "more time": .negation
-]
+private let socialWords: Set<String> = ["please", "thank you", "yes", "goodnight", "together", "hello", "bye", "sorry"]
+private let prepositionWords: Set<String> = ["in", "on", "up", "down", "out", "off", "with", "for", "to", "under", "over"]
+private let adverbWords: Set<String> = ["here", "there", "now", "later", "again"]
+private let conjunctionWords: Set<String> = ["and", "because", "or", "but"]
+private let questionWords: Set<String> = ["what", "where", "when", "why", "who", "how", "which"]
 
 func fitzgeraldCategory(for label: String) -> FitzgeraldCategory {
     let normalized = label.lowercased().trimmingCharacters(in: .whitespaces)
-    if let override = explicitOverrides[normalized] { return override }
-    if questionWords.contains(normalized)    { return .question }
-    if negationWords.contains(normalized)    { return .negation }
+    if negationWords.contains(normalized)  { return .negation }
+    if pronounWords.contains(normalized)   { return .pronoun }
+    if verbWords.contains(normalized)      { return .verb }
+    if adjectiveWords.contains(normalized) { return .adjective }
+    if socialWords.contains(normalized)    { return .prepositionSocial }
+    if prepositionWords.contains(normalized) { return .prepositionSocial }
+    if adverbWords.contains(normalized)    { return .adverb }
     if conjunctionWords.contains(normalized) { return .conjunction }
-    if determinerWords.contains(normalized)  { return .determiner }
-    if socialWords.contains(normalized)      { return .prepositionSocial }
-    if pronounWords.contains(normalized)     { return .pronoun }
-    let tokens = normalized.split(separator: " ").map(String.init)
-    if tokens.first.map({ pronounWords.contains($0) }) == true { return .pronoun }
-    if verbWords.contains(normalized) || tokens.contains(where: { verbWords.contains($0) }) { return .verb }
-    if adjectiveWords.contains(normalized) || tokens.contains(where: { adjectiveWords.contains($0) }) { return .adjective }
-    if adverbWords.contains(normalized) || tokens.contains(where: { adverbWords.contains($0) }) { return .adverb }
+    if questionWords.contains(normalized)  { return .question }
     return .noun
 }
 
 func fitzgeraldColor(for label: String) -> Color {
     fitzgeraldCategory(for: label).color
 }
-

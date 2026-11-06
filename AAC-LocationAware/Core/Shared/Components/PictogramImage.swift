@@ -4,7 +4,7 @@ struct PictogramImage: View {
     @Environment(PictogramManager.self) private var pictogramManager
 
     let word: Word
-    var fallbackSize: CGFloat = 40
+    var fallbackSize: CGFloat = 44
 
     @State private var image: UIImage?
     @State private var didLoad = false
@@ -19,17 +19,30 @@ struct PictogramImage: View {
                     .scaledToFit()
             } else if didLoad {
                 Text(word.label.prefix(1).uppercased())
-                    .font(.system(size: fallbackSize * 0.5, weight: .bold, design: .rounded))
+                    .font(.fredoka(fallbackSize * 0.45))
                     .foregroundStyle(Color.ink)
                     .frame(width: fallbackSize, height: fallbackSize)
+                    .background(Color.paper, in: Circle())
                     .overlay(Circle().strokeBorder(Color.ink, lineWidth: 2))
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityHidden(true)
         .task(id: word.id) {
-            image = await pictogramManager.fetchImage(for: word.label, arasaacId: word.arasaacId)
+            if let bundled = Self.bundledImage(for: word.label) {
+                image = bundled
+            } else {
+                image = await pictogramManager.fetchImage(for: word.label, arasaacId: word.arasaacId)
+            }
             didLoad = true
         }
+    }
+
+    static func bundledImage(for label: String) -> UIImage? {
+        let slug = label.lowercased()
+            .trimmingCharacters(in: .whitespaces)
+            .replacingOccurrences(of: " ", with: "-")
+        return UIImage(named: "pic-\(slug)")
     }
 }
 

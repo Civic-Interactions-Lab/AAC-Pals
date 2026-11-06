@@ -11,6 +11,7 @@ final class BeaconManager {
     /// The room id currently detected. Defaults to "common" (fallback).
     private(set) var currentRoomId: String = kCommonRoomId
     private(set) var isScanning = false
+    private(set) var currentBeacon: DetectedBeacon?
     var scannedBeacons: [DetectedBeacon] { Array(service.scannedBeacons.values) }
 
     var knownBeacons: [BeaconConfig] = []
@@ -45,6 +46,7 @@ final class BeaconManager {
         lastMatchedDate = nil
         isScanning = false
         currentRoomId = kCommonRoomId
+        currentBeacon = nil
     }
 
     func loadBeacons(_ beacons: [AppBeacon]) {
@@ -65,6 +67,7 @@ final class BeaconManager {
         guard let beacon = detected else { return }
         if let match = knownBeacons.first(where: { $0.matches(beacon) }) {
             lastMatchedDate = Date()
+            currentBeacon = beacon
             if currentRoomId != match.roomId {
                 print("[BeaconManager] Entered room: \(match.roomId)")
                 currentRoomId = match.roomId
@@ -90,6 +93,7 @@ final class BeaconManager {
         if elapsed >= fallbackDelay {
             print("[BeaconManager] No beacon for \(Int(elapsed))s — falling back to common")
             currentRoomId = kCommonRoomId
+            currentBeacon = nil
             lastMatchedDate = nil
         }
     }

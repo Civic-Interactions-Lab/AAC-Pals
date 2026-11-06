@@ -14,11 +14,22 @@ final class SpeechManager {
         }
     }
 
-    func speak(_ text: String, rate: Float = 0.5) {
+    var englishVoices: [AVSpeechSynthesisVoice] {
+        AVSpeechSynthesisVoice.speechVoices()
+            .filter { $0.language.hasPrefix("en") && !$0.voiceTraits.contains(.isNoveltyVoice) }
+            .sorted { $0.quality.rawValue != $1.quality.rawValue ? $0.quality.rawValue > $1.quality.rawValue : $0.name < $1.name }
+    }
+
+    func speak(_ text: String, voiceIdentifier: String? = nil) {
         guard !text.isEmpty else { return }
         if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
         let utterance = AVSpeechUtterance(string: text)
-        utterance.rate = rate
+        if let id = voiceIdentifier ?? VoiceSettings.voiceIdentifier {
+            utterance.voice = AVSpeechSynthesisVoice(identifier: id)
+        }
+        utterance.rate = min(max(AVSpeechUtteranceDefaultSpeechRate * Float(VoiceSettings.rate), AVSpeechUtteranceMinimumSpeechRate), AVSpeechUtteranceMaximumSpeechRate)
+        utterance.pitchMultiplier = Float(VoiceSettings.pitch)
+        utterance.volume = Float(VoiceSettings.volume)
         synthesizer.speak(utterance)
     }
 }

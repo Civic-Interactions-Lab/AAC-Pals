@@ -1,27 +1,25 @@
 import SwiftUI
 
-struct SettingsHeader: View {
+struct SettingsHeader<Actions: View>: View {
     let title: String
     let onBack: () -> Void
+    let onDone: () -> Void
+    @ViewBuilder var actions: Actions
 
     var body: some View {
         HStack(spacing: 14) {
-            Button(action: onBack) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(Color.ink)
-                    .frame(width: 48, height: 48)
-                    .background(Color.paper, in: RoundedRectangle(cornerRadius: 16))
-                    .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.ink, lineWidth: 2))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Back")
+            BackSquareButton(action: onBack)
 
             Text(title)
-                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .font(.fredoka(30))
                 .foregroundStyle(Color.ink)
+                .lineLimit(1)
 
-            Spacer()
+            Spacer(minLength: 14)
+
+            actions
+
+            PillButton(title: "DONE", fill: .actionBlue, foreground: .white, action: onDone)
         }
         .padding(.horizontal, 26)
         .padding(.vertical, 18)
@@ -32,6 +30,17 @@ struct SettingsHeader: View {
     }
 }
 
+extension SettingsHeader where Actions == EmptyView {
+    init(title: String, onBack: @escaping () -> Void, onDone: @escaping () -> Void) {
+        self.init(title: title, onBack: onBack, onDone: onDone) { EmptyView() }
+    }
+}
+
 #Preview {
-    SettingsHeader(title: "Settings", onBack: {})
+    VStack(spacing: 0) {
+        SettingsHeader(title: "Words", onBack: {}, onDone: {})
+        SettingsHeader(title: "Rooms & beacons", onBack: {}, onDone: {}) {
+            PillButton(title: "+ NEW ROOM", action: {})
+        }
+    }
 }

@@ -3,14 +3,13 @@ import SwiftUI
 struct CategoryLegend: View {
     var body: some View {
         HStack(spacing: 9) {
-            ForEach(FitzgeraldCategory.legend, id: \.self) { category in
-                Text(category.name)
-                    .font(.system(size: 12, weight: .heavy))
+            ForEach(WordGroup.allCases, id: \.self) { group in
+                Text(group.name)
+                    .font(.figtree(12))
                     .foregroundStyle(Color.ink)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(category.color, in: RoundedRectangle(cornerRadius: 16))
-                    .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.ink, lineWidth: 2))
+                    .sticker(group.color, radius: 16)
             }
         }
     }

@@ -2,10 +2,30 @@ import Foundation
 
 struct AACVocabulary {
     static let defaultBoardWords: [Word] = [
-        Word(label: "I",   arasaacId: 6632),
-        Word(label: "You", arasaacId: 6625),
-        Word(label: "Yes", arasaacId: 5584),
-        Word(label: "No",  arasaacId: 5526),
+        Word(label: "I"),
+        Word(label: "you"),
+        Word(label: "want"),
+        Word(label: "need"),
+        Word(label: "more"),
+        Word(label: "stop"),
+        Word(label: "go"),
+        Word(label: "like"),
+        Word(label: "help"),
+        Word(label: "yes"),
+        Word(label: "no"),
+        Word(label: "please"),
+        Word(label: "eat"),
+        Word(label: "drink"),
+        Word(label: "play"),
+        Word(label: "here"),
+        Word(label: "there"),
+        Word(label: "that"),
+        Word(label: "mine"),
+        Word(label: "hungry"),
+        Word(label: "tired"),
+        Word(label: "hug"),
+        Word(label: "thank you"),
+        Word(label: "all done"),
     ]
 
     static let coreWords: [Word] = [

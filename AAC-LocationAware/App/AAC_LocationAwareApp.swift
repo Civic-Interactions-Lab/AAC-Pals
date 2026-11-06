@@ -13,6 +13,7 @@ struct AAC_LocationAwareApp: App {
                 .environment(delegate.dependencies.beaconManager)
                 .environment(delegate.dependencies.interactionManager)
                 .environment(delegate.dependencies.adminManager)
+                .environment(delegate.dependencies.boardWordsManager)
         }
     }
 }
@@ -25,6 +26,16 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         supportedInterfaceOrientationsFor window: UIWindow?
     ) -> UIInterfaceOrientationMask {
         return .landscape
+    }
+
+    func application(
+        _ application: UIApplication,
+        configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+    ) -> UISceneConfiguration {
+        let configuration = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
+        configuration.delegateClass = SceneDelegate.self
+        return configuration
     }
 
     func application(
@@ -51,6 +62,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     }
 }
 
+final class SceneDelegate: NSObject, UIWindowSceneDelegate {
+    @available(iOS 27.0, *)
+    func supportedInterfaceOrientations(for windowScene: UIWindowScene) -> UIInterfaceOrientationMask {
+        .landscape
+    }
+}
+
 enum BuildConfiguration {
     case mock, development, production
 
@@ -74,6 +92,7 @@ struct Dependency {
     let beaconManager: BeaconManager
     let interactionManager: InteractionManager
     let adminManager: AdminManager
+    let boardWordsManager: BoardWordsManager
 
     init(_ config: BuildConfiguration) {
         switch config {
@@ -83,14 +102,16 @@ struct Dependency {
             self.pictogramManager = PictogramManager(service: MockPictogramService())
             self.beaconManager = BeaconManager(service: MockBeaconService())
             self.interactionManager = InteractionManager(service: MockInteractionService())
-            self.adminManager = AdminManager(service: MockAdminService())
+            self.adminManager = AdminManager(service: LocalAdminService(seedIfEmpty: true))
+            self.boardWordsManager = BoardWordsManager(service: LocalBoardWordsService())
         case .development, .production:
             self.authManager = AuthManager(service: SupabaseAuthService())
             self.userManager = UserManager(service: SupabaseUserService())
             self.pictogramManager = PictogramManager(service: ArasaacPictogramService())
             self.beaconManager = BeaconManager(service: CoreBluetoothBeaconService())
             self.interactionManager = InteractionManager(service: SupabaseInteractionService())
-            self.adminManager = AdminManager(service: SupabaseAdminService())
+            self.adminManager = AdminManager(service: LocalAdminService())
+            self.boardWordsManager = BoardWordsManager(service: LocalBoardWordsService())
         }
     }
 }

@@ -14,13 +14,13 @@ struct AdminAnalytics {
         var analytics = AdminAnalytics()
         analytics.totalInteractions = logs.count
         analytics.uniqueUsers = Set(logs.map(\.userId)).count
-        analytics.uniqueRooms = Set(logs.map(\.roomId)).count
+        analytics.uniqueRooms = Set(logs.compactMap(\.roomId)).count
 
         let wordCounts = Dictionary(grouping: logs, by: \.word).mapValues(\.count)
         analytics.uniqueWords = wordCounts.keys.count
         analytics.topWords = wordCounts.sorted { $0.value > $1.value }.prefix(5).map { ($0.key, $0.value) }
 
-        let roomCounts = Dictionary(grouping: logs, by: \.roomId).mapValues(\.count)
+        let roomCounts = Dictionary(grouping: logs) { $0.roomLabel ?? "No room" }.mapValues(\.count)
         analytics.topRooms = roomCounts.sorted { $0.value > $1.value }.prefix(5).map { ($0.key, $0.value) }
 
         let userCounts = Dictionary(grouping: logs, by: \.userId).mapValues(\.count)

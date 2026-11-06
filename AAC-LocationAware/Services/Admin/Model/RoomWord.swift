@@ -1,58 +1,12 @@
 import Foundation
 
-struct RoomWord: Identifiable, Equatable {
+struct RoomWord: Identifiable, Equatable, Codable {
     let id: String
     let adminId: String
     let roomId: String
     var label: String
     var category: String
     var position: Int
-
-    static func make(label: String, category: String, position: Int = 0, roomId: String, adminId: String) -> RoomWord {
-        RoomWord(id: UUID().uuidString, adminId: adminId, roomId: roomId, label: label, category: category, position: position)
-    }
-
-    func toInsert() -> Insert {
-        Insert(adminId: adminId, roomId: roomId, label: label, category: category, position: position)
-    }
-
-    struct Insert: Encodable {
-        let adminId: String
-        let roomId: String
-        let label: String
-        let category: String
-        let position: Int
-
-        enum CodingKeys: String, CodingKey {
-            case adminId = "admin_id"
-            case roomId = "room_id"
-            case label
-            case category
-            case position
-        }
-    }
-
-    struct Record: Decodable {
-        let id: String
-        let adminId: String
-        let roomId: String
-        let label: String
-        let category: String
-        let position: Int
-
-        enum CodingKeys: String, CodingKey {
-            case id
-            case adminId = "admin_id"
-            case roomId = "room_id"
-            case label
-            case category
-            case position
-        }
-
-        var asRoomWord: RoomWord {
-            RoomWord(id: id, adminId: adminId, roomId: roomId, label: label, category: category, position: position)
-        }
-    }
 
     static func mocks(for roomId: String) -> [RoomWord] {
         let words: [String]

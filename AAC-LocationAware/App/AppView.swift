@@ -4,18 +4,24 @@ struct AppView: View {
     @Environment(AuthManager.self) private var authManager
     @Environment(UserManager.self) private var userManager
 
+    @State private var didCheckSession = false
+
     var body: some View {
         Group {
-            if authManager.isLoading {
-                ProgressView()
+            if !didCheckSession {
+                ProgressView().tint(Color.ink)
             } else if !authManager.isSignedIn {
-                Text("Login")
+                LoginView()
             } else {
                 BoardView()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .task { await authManager.loadCurrentUser() }
+        .background(Color.paper)
+        .task {
+            await authManager.loadCurrentUser()
+            didCheckSession = true
+        }
         .task(id: userManager.profiles.count) { await restoreActiveUser() }
         .preferredColorScheme(.light)
     }
@@ -54,6 +60,7 @@ extension View {
             .environment(BeaconManager(service: MockBeaconService()))
             .environment(InteractionManager(service: MockInteractionService()))
             .environment(adminManager)
+            .environment(BoardWordsManager(service: MockBoardWordsService()))
             .task { await userManager.loadProfiles(adminId: "preview-admin") }
             .task { if preloadRooms { await adminManager.loadRooms(adminId: "preview-admin") } }
     }
@@ -69,6 +76,7 @@ extension View {
         .environment(BeaconManager(service: MockBeaconService()))
         .environment(InteractionManager(service: MockInteractionService()))
         .environment(AdminManager(service: MockAdminService()))
+        .environment(BoardWordsManager(service: MockBoardWordsService()))
 }
 
 #Preview("Profile selector") {
@@ -81,6 +89,7 @@ extension View {
         .environment(BeaconManager(service: MockBeaconService()))
         .environment(InteractionManager(service: MockInteractionService()))
         .environment(AdminManager(service: MockAdminService()))
+        .environment(BoardWordsManager(service: MockBoardWordsService()))
 }
 
 #Preview("Signed in") {
