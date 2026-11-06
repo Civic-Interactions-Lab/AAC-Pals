@@ -14,22 +14,30 @@ struct LoginView: View {
     }
 
     var body: some View {
-        ZStack {
-            Color.paper.ignoresSafeArea()
-
-            Circle()
-                .fill(Color.butter)
-                .frame(width: 360, height: 360)
-                .position(x: 30, y: 30)
-            Circle()
-                .fill(Color.signalGreen.opacity(0.75))
-                .frame(width: 400, height: 400)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                .offset(x: 140, y: 160)
-
-            card
+        GeometryReader { proxy in
+            ScrollView {
+                card
+                    .padding(.vertical, 24)
+                    .frame(maxWidth: .infinity, minHeight: proxy.size.height)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollDismissesKeyboard(.interactively)
         }
-        .ignoresSafeArea()
+        .background {
+            ZStack {
+                Color.paper
+                Circle()
+                    .fill(Color.butter)
+                    .frame(width: 360, height: 360)
+                    .position(x: 30, y: 30)
+                Circle()
+                    .fill(Color.signalGreen.opacity(0.75))
+                    .frame(width: 400, height: 400)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .offset(x: 140, y: 160)
+            }
+            .ignoresSafeArea()
+        }
         .onAppear { focused = .email }
     }
 
