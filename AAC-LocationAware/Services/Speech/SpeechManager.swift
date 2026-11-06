@@ -5,6 +5,10 @@ final class SpeechManager {
 
     private let synthesizer = AVSpeechSynthesizer()
 
+    private let soloPronunciations: [String: String] = [
+        "i": "eye",
+    ]
+
     private init() {
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: .duckOthers)
@@ -23,7 +27,7 @@ final class SpeechManager {
     func speak(_ text: String, voiceIdentifier: String? = nil) {
         guard !text.isEmpty else { return }
         if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
-        let utterance = AVSpeechUtterance(string: text)
+        let utterance = AVSpeechUtterance(string: spoken(text))
         if let id = voiceIdentifier ?? VoiceSettings.voiceIdentifier {
             utterance.voice = AVSpeechSynthesisVoice(identifier: id)
         }
@@ -31,5 +35,10 @@ final class SpeechManager {
         utterance.pitchMultiplier = Float(VoiceSettings.pitch)
         utterance.volume = Float(VoiceSettings.volume)
         synthesizer.speak(utterance)
+    }
+
+    private func spoken(_ text: String) -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return soloPronunciations[trimmed.lowercased()] ?? text
     }
 }

@@ -8,6 +8,7 @@ class AuthManager {
     private(set) var currentUser: AuthUser?
     private(set) var isLoading = true
     private(set) var error: String?
+    private(set) var notice: String?
 
     var isSignedIn: Bool { currentUser != nil }
 
@@ -23,6 +24,7 @@ class AuthManager {
 
     func signIn(email: String, password: String) async {
         error = nil
+        notice = nil
         isLoading = true
         do {
             currentUser = try await service.signIn(email: email, password: password)
@@ -32,15 +34,22 @@ class AuthManager {
         isLoading = false
     }
 
-    func signUp(email: String, password: String) async {
+    @discardableResult
+    func signUp(email: String, password: String) async -> Bool {
         error = nil
+        notice = nil
         isLoading = true
+        defer { isLoading = false }
         do {
             currentUser = try await service.signUp(email: email, password: password)
+            return true
+        } catch AuthError.emailConfirmationRequired {
+            notice = AuthError.emailConfirmationRequired.errorDescription
+            return true
         } catch {
             self.error = error.localizedDescription
+            return false
         }
-        isLoading = false
     }
 
     func signOut() async {
@@ -56,5 +65,10 @@ class AuthManager {
 
     func setError(_ message: String) {
         error = message
+    }
+
+    func clearMessages() {
+        error = nil
+        notice = nil
     }
 }

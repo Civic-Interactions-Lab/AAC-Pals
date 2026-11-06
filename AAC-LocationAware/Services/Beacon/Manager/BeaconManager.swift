@@ -19,7 +19,17 @@ final class BeaconManager {
     /// How long (seconds) with no matching beacon signal before falling back to common.
     var fallbackDelay: TimeInterval = 8.0
 
-    private var lastMatchedDate: Date?
+    var enterThreshold: Int = DetectionRadius.medium.rssi
+    var stayThreshold: Int = DetectionRadius.far.rssi - 5
+    var switchMargin: Double = 6
+
+    private struct RoomSignal {
+        var rssi: Double
+        var lastSeen: Date
+        var beacon: DetectedBeacon
+    }
+
+    private var signals: [String: RoomSignal] = [:]
     private var watchdogTask: Task<Void, Never>?
 
     init(service: BeaconService) {
@@ -43,7 +53,7 @@ final class BeaconManager {
         service.stopScanning()
         watchdogTask?.cancel()
         watchdogTask = nil
-        lastMatchedDate = nil
+        signals = [:]
         isScanning = false
         currentRoomId = kCommonRoomId
         currentBeacon = nil
@@ -56,7 +66,7 @@ final class BeaconManager {
                 peripheralName: looksLikeUUID ? nil : appBeacon.beaconUuid,
                 major: nil,
                 minor: nil,
-                rssiThreshold: DetectionRadius.medium.rssi,
+                rssiThreshold: enterThreshold,
                 roomId: appBeacon.roomId,
                 beaconUuid: looksLikeUUID ? appBeacon.beaconUuid : nil
             )
@@ -64,37 +74,61 @@ final class BeaconManager {
     }
 
     private func handle(_ detected: DetectedBeacon?) {
-        guard let beacon = detected else { return }
-        if let match = knownBeacons.first(where: { $0.matches(beacon) }) {
-            lastMatchedDate = Date()
-            currentBeacon = beacon
-            if currentRoomId != match.roomId {
-                print("[BeaconManager] Entered room: \(match.roomId)")
-                currentRoomId = match.roomId
+        guard let beacon = detected, beacon.rssi < 0,
+              let roomId = knownBeacons.first(where: { $0.identifies(beacon) })?.roomId
+        else { return }
+        let reading = Double(beacon.rssi)
+        if var signal = signals[roomId] {
+            signal.rssi = signal.rssi * 0.6 + reading * 0.4
+            signal.lastSeen = Date()
+            signal.beacon = beacon
+            signals[roomId] = signal
+        } else {
+            signals[roomId] = RoomSignal(rssi: reading, lastSeen: Date(), beacon: beacon)
+        }
+        evaluate()
+    }
+
+    private func evaluate() {
+        let now = Date()
+        signals = signals.filter { now.timeIntervalSince($0.value.lastSeen) < fallbackDelay }
+
+        let strongest = signals
+            .filter { $0.value.rssi >= Double(enterThreshold) }
+            .max { $0.value.rssi < $1.value.rssi }
+
+        if let current = signals[currentRoomId], current.rssi >= Double(stayThreshold) {
+            currentBeacon = current.beacon
+            if let strongest, strongest.key != currentRoomId, strongest.value.rssi >= current.rssi + switchMargin {
+                enter(strongest.key, beacon: strongest.value.beacon)
             }
+            return
+        }
+
+        if let strongest {
+            enter(strongest.key, beacon: strongest.value.beacon)
+        } else if currentRoomId != kCommonRoomId {
+            print("[BeaconManager] Lost room \(currentRoomId) — falling back to common")
+            currentRoomId = kCommonRoomId
+            currentBeacon = nil
         }
     }
 
-    /// Polls every 3 seconds. If no matching beacon seen within fallbackDelay, revert to common.
+    private func enter(_ roomId: String, beacon: DetectedBeacon) {
+        currentBeacon = beacon
+        guard currentRoomId != roomId else { return }
+        print("[BeaconManager] Entered room: \(roomId)")
+        currentRoomId = roomId
+    }
+
     private func startWatchdog() {
         watchdogTask?.cancel()
         watchdogTask = Task {
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(3))
+                try? await Task.sleep(for: .seconds(1))
                 guard !Task.isCancelled else { return }
-                checkFallback()
+                evaluate()
             }
-        }
-    }
-
-    private func checkFallback() {
-        guard currentRoomId != kCommonRoomId else { return }
-        let elapsed = lastMatchedDate.map { Date().timeIntervalSince($0) } ?? fallbackDelay
-        if elapsed >= fallbackDelay {
-            print("[BeaconManager] No beacon for \(Int(elapsed))s — falling back to common")
-            currentRoomId = kCommonRoomId
-            currentBeacon = nil
-            lastMatchedDate = nil
         }
     }
 }

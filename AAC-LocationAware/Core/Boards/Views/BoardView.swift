@@ -75,6 +75,12 @@ struct BoardView: View {
             await pictogramManager.prefetch(words: words)
         }
         .task(id: beaconManager.currentRoomId) { await loadRoomWords() }
+        .onChange(of: adminManager.beaconsByRoom) { _, pairings in
+            beaconManager.loadBeacons(Array(pairings.values.joined()))
+        }
+        .onChange(of: adminManager.words(for: beaconManager.currentRoomId)) { _, _ in
+            Task { await loadRoomWords() }
+        }
     }
 
     private func startRoomDetection() async {

@@ -8,7 +8,10 @@ let supabase = SupabaseClient(
 
 struct SupabaseAuthService: AuthService {
     func signUp(email: String, password: String) async throws -> AuthUser {
-        let session = try await supabase.auth.signUp(email: email, password: password)
+        let response = try await supabase.auth.signUp(email: email, password: password)
+        guard case .session(let session) = response else {
+            throw AuthError.emailConfirmationRequired
+        }
         return AuthUser(id: session.user.id.uuidString, email: session.user.email ?? "")
     }
 

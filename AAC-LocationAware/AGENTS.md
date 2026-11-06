@@ -60,7 +60,7 @@ AAC-LocationAware/
 
 - **Board:** core-word grid plus the current room's words; tapping a tile adds it to the sentence and speaks it; play the full sentence; remove or clear words.
 - **Board layout:** room words (left 1/3) and main words (right 2/3) each sit on a cream `BoardCard`; the room card shows a dashed wifi-off placeholder when no room is detected. The main board never changes. The board owns beacon scanning.
-- **Room detection:** matches beacons by name or UUID above an RSSI threshold; falls back to `common` after 8s without a match; the board can override the room by hand.
+- **Room detection:** each paired beacon's RSSI is smoothed per room. Strongest room ≥ -70 wins; the current room is kept while ≥ -85 and only replaced when another room is 6 dB stronger. A room is dropped 8s after its last reading (checked every second). The CoreBluetooth scan restarts every 4s so iOS keeps reporting readings steadily. RSSI 127 ("unavailable") is ignored. Pairing changes reload into `BeaconManager` automatically.
 - **Pictograms:** ARASAAC search with aliases and a last-word fallback; URLs and images cached; tiles coloured by Fitzgerald Key category.
 - **Profiles:** caregiver creates, renames, and deletes child profiles.
 - **Admin:** CRUD for rooms, room words, and beacons (with a live beacon scanner).

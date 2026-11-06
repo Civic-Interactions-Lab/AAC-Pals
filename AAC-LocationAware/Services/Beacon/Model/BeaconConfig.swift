@@ -17,7 +17,10 @@ struct BeaconConfig {
     }
 
     func matches(_ beacon: DetectedBeacon) -> Bool {
-        guard beacon.rssi >= rssiThreshold else { return false }
+        beacon.rssi >= rssiThreshold && identifies(beacon)
+    }
+
+    func identifies(_ beacon: DetectedBeacon) -> Bool {
         if let uuid = beaconUuid, let bUuid = beacon.uuid {
             return bUuid.lowercased() == uuid.lowercased()
         }

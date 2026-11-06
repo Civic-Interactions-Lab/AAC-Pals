@@ -86,7 +86,6 @@ struct SettingsView: View {
         userManager.selectProfile(profile)
         UserDefaults.standard.set(profile.id, forKey: kActiveUserIdKey)
         pictogramManager.clearSentence()
-        dismiss()
     }
 
     private func startNewProfile() {

@@ -37,11 +37,13 @@ struct MockAuthService: AuthService {
 
 enum AuthError: LocalizedError {
     case invalidCredentials
+    case emailConfirmationRequired
     case unknown
 
     var errorDescription: String? {
         switch self {
         case .invalidCredentials: return "Invalid email or password."
+        case .emailConfirmationRequired: return "Account created. Check your email to confirm it, then sign in."
         case .unknown: return "Something went wrong. Please try again."
         }
     }

@@ -6,6 +6,7 @@ final class CoreBluetoothBeaconService: NSObject, BeaconService {
     private(set) var scannedBeacons: [String: DetectedBeacon] = [:]
 
     private var central: CBCentralManager?
+    private var restartTimer: Timer?
 
     override init() {
         super.init()
@@ -14,11 +15,30 @@ final class CoreBluetoothBeaconService: NSObject, BeaconService {
     func startScanning() {
         scannedBeacons = [:]
         central = CBCentralManager(delegate: self, queue: .main)
+        restartTimer?.invalidate()
+        restartTimer = Timer.scheduledTimer(withTimeInterval: 4, repeats: true) { [weak self] _ in
+            self?.restartScan()
+        }
     }
 
     func stopScanning() {
+        restartTimer?.invalidate()
+        restartTimer = nil
         central?.stopScan()
         central = nil
+    }
+
+    private func restartScan() {
+        guard let central, central.state == .poweredOn else { return }
+        central.stopScan()
+        scan(with: central)
+    }
+
+    fileprivate func scan(with central: CBCentralManager) {
+        central.scanForPeripherals(
+            withServices: nil,
+            options: [CBCentralManagerScanOptionAllowDuplicatesKey: true]
+        )
     }
 }
 
@@ -27,10 +47,7 @@ final class CoreBluetoothBeaconService: NSObject, BeaconService {
 extension CoreBluetoothBeaconService: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         guard central.state == .poweredOn else { return }
-        central.scanForPeripherals(
-            withServices: nil,
-            options: [CBCentralManagerScanOptionAllowDuplicatesKey: true]
-        )
+        scan(with: central)
     }
 
     func centralManager(

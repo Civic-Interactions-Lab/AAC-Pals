@@ -3,14 +3,36 @@ import SwiftUI
 struct LoginView: View {
     @Environment(AuthManager.self) private var authManager
 
+    private enum Mode { case signIn, signUp }
+    private enum Field { case email, password, confirm }
+
+    private static let minimumPasswordLength = 6
+
+    @State private var mode: Mode = .signIn
     @State private var email = ""
     @State private var password = ""
+    @State private var confirmPassword = ""
     @FocusState private var focused: Field?
 
-    private enum Field { case email, password }
+    private var trimmedEmail: String { email.trimmingCharacters(in: .whitespaces) }
+
+    private var validationMessage: String? {
+        guard mode == .signUp else { return nil }
+        if !password.isEmpty, password.count < Self.minimumPasswordLength {
+            return "Password needs at least \(Self.minimumPasswordLength) characters."
+        }
+        if !confirmPassword.isEmpty, confirmPassword != password {
+            return "Passwords don't match."
+        }
+        return nil
+    }
 
     private var canSubmit: Bool {
-        !email.trimmingCharacters(in: .whitespaces).isEmpty && !password.isEmpty && !authManager.isLoading
+        guard !trimmedEmail.isEmpty, !password.isEmpty, !authManager.isLoading else { return false }
+        if mode == .signUp {
+            return password.count >= Self.minimumPasswordLength && confirmPassword == password
+        }
+        return true
     }
 
     var body: some View {
@@ -38,17 +60,25 @@ struct LoginView: View {
             }
             .ignoresSafeArea()
         }
-        .onAppear { focused = .email }
+        .onAppear {
+            authManager.clearMessages()
+            focused = .email
+        }
     }
 
     private var card: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Sign in")
+            Text(mode == .signIn ? "Sign in" : "Create account")
                 .font(.fredoka(40))
                 .foregroundStyle(Color.ink)
 
-            Caption("Caregivers only, once per iPad. Children never see this screen.", size: 14)
-                .padding(.top, 8)
+            Caption(
+                mode == .signIn
+                    ? "Caregivers only, once per iPad. Children never see this screen."
+                    : "One caregiver account holds every child's profile and usage history.",
+                size: 14
+            )
+            .padding(.top, 8)
 
             LabeledField(label: "Email", isFocused: focused == .email) {
                 TextField("you@home.com", text: $email)
@@ -63,29 +93,37 @@ struct LoginView: View {
             .padding(.top, 22)
 
             LabeledField(label: "Password", isFocused: focused == .password) {
-                SecureField("Password", text: $password)
-                    .textContentType(.password)
+                SecureField(mode == .signUp ? "At least \(Self.minimumPasswordLength) characters" : "Password", text: $password)
+                    .textContentType(mode == .signUp ? .newPassword : .password)
                     .focused($focused, equals: .password)
-                    .submitLabel(.go)
-                    .onSubmit(signIn)
+                    .submitLabel(mode == .signUp ? .next : .go)
+                    .onSubmit {
+                        if mode == .signUp { focused = .confirm } else { submit() }
+                    }
             }
             .padding(.top, 12)
 
-            if let error = authManager.error {
-                Text(error)
-                    .font(.figtree(13))
-                    .foregroundStyle(Color.ink)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .sticker(.categoryNegation, radius: 12)
-                    .padding(.top, 12)
+            if mode == .signUp {
+                LabeledField(label: "Confirm password", isFocused: focused == .confirm) {
+                    SecureField("Type it again", text: $confirmPassword)
+                        .textContentType(.newPassword)
+                        .focused($focused, equals: .confirm)
+                        .submitLabel(.go)
+                        .onSubmit(submit)
+                }
+                .padding(.top, 12)
             }
 
-            Button(action: signIn) {
+            if let message = validationMessage ?? authManager.error {
+                banner(message, fill: .categoryNegation)
+            } else if let notice = authManager.notice {
+                banner(notice, fill: .signalGreen)
+            }
+
+            Button { submit() } label: {
                 HStack(spacing: 10) {
                     if authManager.isLoading { ProgressView().tint(.white) }
-                    Text("Sign in")
+                    Text(mode == .signIn ? "Sign in" : "Create account")
                 }
                 .font(.fredoka(22))
                 .foregroundStyle(.white)
@@ -98,6 +136,21 @@ struct LoginView: View {
             .disabled(!canSubmit)
             .opacity(canSubmit || authManager.isLoading ? 1 : 0.6)
             .padding(.top, 20)
+
+            HStack(spacing: 6) {
+                Text(mode == .signIn ? "New here?" : "Already have an account?")
+                    .font(.figtree(14, .semibold))
+                    .foregroundStyle(Color.ink.opacity(0.86))
+                Button { switchMode() } label: {
+                    Text(mode == .signIn ? "Create an account" : "Sign in")
+                        .font(.figtree(14))
+                        .foregroundStyle(Color.actionBlue)
+                }
+                .buttonStyle(.plain)
+                .disabled(authManager.isLoading)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 16)
         }
         .padding(.horizontal, 36)
         .padding(.vertical, 34)
@@ -105,12 +158,44 @@ struct LoginView: View {
         .sticker(.paper, radius: 16)
         .compositingGroup()
         .shadow(color: Color.ink.opacity(0.18), radius: 14, y: 10)
+        .animation(.easeInOut(duration: 0.2), value: mode)
     }
 
-    private func signIn() {
+    private func banner(_ text: String, fill: Color) -> some View {
+        Text(text)
+            .font(.figtree(13))
+            .foregroundStyle(Color.ink)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .sticker(fill, radius: 12)
+            .padding(.top, 12)
+    }
+
+    private func switchMode() {
+        mode = mode == .signIn ? .signUp : .signIn
+        password = ""
+        confirmPassword = ""
+        authManager.clearMessages()
+        focused = .email
+    }
+
+    private func submit() {
         guard canSubmit else { return }
         focused = nil
-        Task { await authManager.signIn(email: email.trimmingCharacters(in: .whitespaces), password: password) }
+        Task {
+            switch mode {
+            case .signIn:
+                await authManager.signIn(email: trimmedEmail, password: password)
+            case .signUp:
+                let created = await authManager.signUp(email: trimmedEmail, password: password)
+                if created, !authManager.isSignedIn {
+                    mode = .signIn
+                    password = ""
+                    confirmPassword = ""
+                }
+            }
+        }
     }
 }
 
